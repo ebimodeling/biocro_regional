@@ -7,7 +7,7 @@ Currently, this repository contains settings files for developing the [`globalbi
 
 These inputs were prepared for the MsTMIP runs, and we will need to comply with any restrictions on their use at time of publication.
 
-Files are on ebi-forecast in `/home/dlebauer/.pecan/dbfiles/`, on biocluster in `/home/groups/ebimodeling/`
+Files are on ebi-forecast in `/home/share/data/`, on biocluster in `/home/groups/ebimodeling/`
 
 * met driver data is in `met/cruncep/all.nc`
 * soil data is in `soil/hwsd.nc`
