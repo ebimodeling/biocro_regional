@@ -46,11 +46,11 @@
     </site>
     <inputs>
        <!--<met>/home/dlebauer/.pecan/dbfiles/met/all_gfdl-esm2m_hist_1951-2005.nc</met>-->
-      <met>/home/dlebauer/.pecan/dbfiles/met/cruncep/all.nc</met>
-      <soil>/home/dlebauer/.pecan/dbfiles/soil/hwsd.nc</soil>
+      <met>/home/share/data/met/cruncep/all.nc</met>
+      <soil>/home/share/data/soil/hwsd.nc</soil>
     </inputs>
-    <start.date>2004-01-01 06:00:00</start.date>
-    <end.date>2005-12-31 05:59:00</end.date>
+    <start.date>2004-01-05 06:00:00</start.date>
+    <end.date>2004-12-25 05:59:00</end.date>
     <host> 
       <name>localhost</name>
     </host>
