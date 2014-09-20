@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <pecan>
-  <outdir>/tmp/biocrotest/</outdir>
+  <outdir>/home/dlebauer/.pecan/biocrotest/</outdir>
   <pfts>
     <pft>
       <name>salix</name>
