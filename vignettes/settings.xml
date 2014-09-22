@@ -50,8 +50,8 @@
       <!--
 <met>/home/share/data/met/cruncep/all.nc</met>
 <soil>/home/share/data/soil/hwsd.nc</soil>-->
-    <met>/home/groups/ebimodeling/met/cruncep/out/all_uncompressed.nc</met>
-    <soil>/home/groups/ebimodeling/soil/global/hwsd/soil_global_hd_filled.nc</soil>
+    <met>/home/share/data/met/cruncep/out/all_uncompressed.nc</met>
+    <soil>/home/share/data/ebimodeling/soil/global/hwsd/soil_global_hd_filled.nc</soil>
     </inputs>
     <start.date>2004-01-05 06:00:00</start.date>
     <end.date>2004-12-25 05:59:00</end.date>
