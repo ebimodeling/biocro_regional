@@ -81,11 +81,43 @@ lat <- ncvar_get(biome.nc, "lat")
 lon <- ncvar_get(biome.nc, "lon")
 biome <- ncvar_get(biome.nc, "biome_type")
 type <- ncvar_get(biome.nc, "type")
-biome <- cbind(expand.grid(lat, lon), as.vector(biome))
-colnames(biome) <- c("lat", "lon", "biome")
+biome <- cbind(expand.grid(lon, lat), as.vector(biome))
+colnames(biome) <- c("lon", "lat", "biome_id")
+synmap_lookup <- read.csv("data//synmap_lookup.csv")
+biome <- data.table(
+  merge(biome, synmap_lookup, 
+        by.x = "biome_id",
+        by.y = "value"))
+
+trees <- biome[, list(
+  lat, lon, 
+  life_forms,
+  trees = ifelse(life_forms == "Trees", TRUE, FALSE),
+  trop_forest = ifelse(tree_leaf_type %in% c("Broad", "Mixed") & tree_leaf_longevity == "Evergreen", TRUE, FALSE))]
+
+tmp <- merge(biocro_result[,list(lat, lon, mat, map, yield)], trees, by = c("lat", "lon"))
+
+notrees <- tmp[!as.logical(trees)]
+notrop  <- tmp[!as.logical(trop_forest)]
+
+ggplot(data = notrees) + 
+  geom_raster(aes(lon, lat, fill = life_forms)) + 
+  #scale_fill_continuous(colours = rainbow(7)) + 
+  worldmap 
+
+ggplot(data = notrees[map > 200]) + 
+  geom_raster(aes(lon, lat, fill = yield)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  #worldmap + 
+  ggtitle("Exclude all Deserts (MAP < 200 mm) and Tree Biomes") + worldmap 
+
+
 ```
 
 ```{r}
+
+
+
 ggplot(data = biocro_result) + 
   geom_point(aes(mat, map, color = yield)) + 
   scale_color_gradientn(colours = rainbow(7)) +
