@@ -1,0 +1,48 @@
+value,life_forms,tree_leaf_type,tree_leaf_longevity,percent_land
+1,Trees,Needle,Evergreen,9.8
+2,Trees,Needle,Deciduous,1.7
+3,Trees,Needle,Mixed,0.6
+4,Trees,Broad,Evergreen,8.2
+5,Trees,Broad,Deciduous,3
+6,Trees,Broad,Mixed,0.5
+7,Trees,Mixed,Evergreen,0.25
+8,Trees,Mixed,Deciduous,0.03
+9,Trees,Mixed,Mixed,3.5
+10,Trees & Shrubs,Needle,Evergreen,1.5
+11,Trees & Shrubs,Needle,Deciduous,0.2
+12,Trees & Shrubs,Needle,Mixed,0.05
+13,Trees & Shrubs,Broad,Evergreen,0.3
+14,Trees & Shrubs,Broad,Deciduous,2.5
+15,Trees & Shrubs,Broad,Mixed,0.2
+16,Trees & Shrubs,Mixed,Evergreen,0.03
+17,Trees & Shrubs,Mixed,Deciduous,0.04
+18,Trees & Shrubs,Mixed,Mixed,0.3
+19,Trees & Grasses,Needle,Evergreen,0.2
+20,Trees & Grasses,Needle,Deciduous,0.03
+21,Trees & Grasses,Needle,Mixed,0.01
+22,Trees & Grasses,Broad,Evergreen,0.3
+23,Trees & Grasses,Broad,Deciduous,2.15
+24,Trees & Grasses,Broad,Mixed,0.15
+25,Trees & Grasses,Mixed,Evergreen,0.005
+26,Trees & Grasses,Mixed,Deciduous,0.02
+27,Trees & Grasses,Mixed,Mixed,0.2
+28,Trees & Crops,Needle,Evergreen,0.3
+29,Trees & Crops,Needle,Deciduous,0.006
+30,Trees & Crops,Needle,Mixed,0.003
+31,Trees & Crops,Broad,Evergreen,0.7
+32,Trees & Crops,Broad,Deciduous,1.1
+33,Trees & Crops,Broad,Mixed,0.2
+34,Trees & Crops,Mixed,Evergreen,0.01
+35,Trees & Crops,Mixed,Deciduous,0.01
+36,Trees & Crops,Mixed,Mixed,0.4
+37,Shrubs,-,-,4.5
+38,Shrubs & Grasses,-,-,8.3
+39,Shrubs & Crops,-,-,0.4
+40,Shrubs & Barren,-,-,10.5
+41,Grasses,-,-,8.3
+42,Grasses & Crops,-,-,1.5
+43,Grasses & Barren,-,-,0.3
+44,Crops,-,-,10.7
+45,Barren,-,-,11.7
+46,Urban,-,-,0.2
+47,Snow & Ice,-,-,5.2

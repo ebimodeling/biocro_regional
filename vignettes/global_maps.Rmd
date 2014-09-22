@@ -1,0 +1,110 @@
+---
+title: "Global Maps of Crop Yields Simulated by BioCro"
+author: "David LeBauer"
+date: "9/16/2014"
+output:
+  html_document:
+    fig_height: 3
+    fig_width: 8
+---
+
+```{r echo=FALSE, results='hide',message=FALSE}
+library(ggplot2)
+library(data.table)
+library(maps)
+
+## for setting xlim / ylim
+#continents <- data.table(map_data("world"))
+#worldmap <- ggplot() + geom_polygon(data = continents[lat > -31 & lat < 37], aes(long, lat, group = group), fill = NA, color = "grey")
+worldmap <- borders("world", colour = "grey")
+load("~/.pecan/biocrotest/biocro_output.RData")
+```
+
+
+### Look at entire globe
+
+```{r}
+theme_set(theme_classic())
+ggplot(data = biocro_result) + 
+  geom_tile(aes(lon, lat, fill = yield)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  worldmap
+```
+
+
+### Look at climate
+```{r}
+
+ggplot(data = biocro_result) + 
+  geom_tile(aes(lon, lat, fill = mat)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  worldmap + ggtitle("MAT")
+
+ggplot(data = biocro_result[map<200]) + 
+  geom_tile(aes(lon, lat, fill = map)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  worldmap + ggtitle("Desert MAP: Too dry")
+
+ggplot(data = biocro_result[mat < 15]) + 
+  geom_tile(aes(lon, lat, fill = map)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  worldmap + ggtitle("MAT: Too cold")
+
+ggplot(data = biocro_result) + 
+  geom_point(aes(mat, map, color = yield)) + 
+  scale_color_gradientn(colours = rainbow(7)) +
+  geom_hline(aes(yintercept = 500), linetype = 2) + 
+  geom_vline(aes(xintercept = 15), linetype = 2)
+```
+
+### Subset by climate
+
+* MAT > 10 C
+* MAP > 200 mm
+
+```{r}
+climate_subset <- biocro_result[map > 200 ]
+
+ggplot(data = climate_subset) + 
+  geom_tile(aes(lon, lat, fill = yield)) + 
+  scale_fill_gradientn(colours = rainbow(7)) + 
+  worldmap
+
+```
+
+### Biome subset
+
+```{r}
+library(ncdf4)
+biome.nc <- nc_open("/home/share/data/biome/SYNMAP_Global_HD_new.nc")
+lat <- ncvar_get(biome.nc, "lat")
+lon <- ncvar_get(biome.nc, "lon")
+biome <- ncvar_get(biome.nc, "biome_type")
+type <- ncvar_get(biome.nc, "type")
+biome <- cbind(expand.grid(lat, lon), as.vector(biome))
+colnames(biome) <- c("lat", "lon", "biome")
+```
+
+```{r}
+ggplot(data = biocro_result) + 
+  geom_point(aes(mat, map, color = yield)) + 
+  scale_color_gradientn(colours = rainbow(7)) +
+  scale_y_sqrt()
+
+ggplot(biocro_result) + geom_point(aes(mat, yield))
+ggplot(biocro_result) + geom_point(aes(map, yield))
+
+
+
+ggplot(biocro_result) + geom_hex(aes(map, yield, col = mat)) + 
+  scale_color_gradientn(colours = rainbow(3))
+ggplot(biocro_result) + geom_point(aes(map, Stem/Root))
+ggplot(biocro_result) + geom_point(aes(map, Leaf/Root))
+ggplot(biocro_result) + geom_point(aes(map, (Leaf+Stem)/Root))
+ggplot(biocro_result) + geom_point(aes(map, (Leaf/Stem)))
+```
+
+
+
+
+```

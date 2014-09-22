@@ -204,14 +204,3 @@ for(lat in Lat){
     }
 }
 save(biocro_result, file = file.path(outdir, "biocro_output.RData"))
-
-pdf(file.path(outdir, "summary_plots.pdf"))
-ggplot(data = biocro_result) + geom_tile(aes(lon, lat, fill = yield)) + scale_fill_continuous(low = "blue", high = "red")
-ggplot(biocro_result) + geom_point(aes(mat, yield))
-ggplot(biocro_result) + geom_point(aes(map, yield))
-ggplot(biocro_result) + geom_point(aes(map, Stem/Root))
-ggplot(biocro_result) + geom_point(aes(map, Leaf/Root))
-ggplot(biocro_result) + geom_point(aes(map, (Leaf+Stem)/Root))
-ggplot(biocro_result) + geom_point(aes(map, (Leaf/Stem)))
-
-dev.off()
