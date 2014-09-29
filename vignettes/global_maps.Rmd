@@ -17,7 +17,8 @@ library(maps)
 #continents <- data.table(map_data("world"))
 #worldmap <- ggplot() + geom_polygon(data = continents[lat > -31 & lat < 37], aes(long, lat, group = group), fill = NA, color = "grey")
 worldmap <- borders("world", colour = "grey")
-load("~/.pecan/biocrotest/biocro_output.RData")
+load("data/biocro_result.RData")
+ncep <- read.csv("data/global_sugarcane_ncep.csv")
 ```
 
 
