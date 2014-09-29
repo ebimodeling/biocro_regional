@@ -18,7 +18,6 @@ library(maps)
 #worldmap <- ggplot() + geom_polygon(data = continents[lat > -31 & lat < 37], aes(long, lat, group = group), fill = NA, color = "grey")
 worldmap <- borders("world", colour = "grey")
 load("data/biocro_result.RData")
-ncep <- read.csv("data/global_sugarcane_ncep.csv")
 ```
 
 
@@ -138,6 +137,34 @@ ggplot(biocro_result) + geom_point(aes(map, (Leaf/Stem)))
 ```
 
 
+### CRUNCEP vs. NCEP 2.5 degree simulation from 2013
 
+```{r}
+ncep <- fread("data/global_sugarcane_ncep.csv")
+
+climate_mask <- geom_tile(data = biocro_result[map < 200 | mat < 10], aes(lon, lat), color = 'white') 
+cruncep_pred <- ggplot(data = biocro_result[yield > 1]) + 
+  geom_tile(aes(lon, lat, fill = yield)) + 
+  scale_fill_gradientn(colours = rainbow(7), limits = c(0, 55)) + 
+  climate_mask + 
+  worldmap
+
+ncep <- ncep[ Lat < 36 & Lat > -31]
+ncep_pred <- ggplot(data = ncep[avgyield > 1])  + 
+  geom_tile(aes(Lon, Lat, fill = avgyield)) + 
+  scale_fill_gradientn(colours = rainbow(7), limits = c(0, 55)) + 
+  climate_mask + 
+  worldmap
+
+grid.arrange(ncep_pred, cruncep_pred, ncol = 1)
+
+d <- rbind.data.frame(biocro_result[,list(lat, lon, yield, resolution = '0.5 degrees')], 
+                      ncep[,list(lat = Lat, lon = Lon, yield = avgyield, resolution = '2.5 degrees')])
+
+ggplot(data = d) + 
+  geom_histogram(aes(x = yield, y = ..density..), binwidth = 2) + scale_color_brewer("Set2") + facet_wrap(~resolution, nrow = 2) + theme_bw()
+
+ggplot(data = d) + 
+  geom_histogram(aes(x = yield, y = ..density.., fill = resolution), binwidth = 1, linewidth = 2, position = position_identity(), alpha = 0.3) + scale_fill_manual(values = c('red', 'black')) + theme_bw()
 
 ```
