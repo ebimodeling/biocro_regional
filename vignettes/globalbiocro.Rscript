@@ -53,7 +53,8 @@ lon <- settings$run$site$lon
 config <- read.config.BIOCRO("~/dev/biocro_global/vignettes/config.xml")
 
 run.biocro <- function(lat, lon, met.nc = met.nc, soil.nc = soil.nc, 
-                       start.date = start.date, end.date = end.date, coppice.interval = 4, genus = "Saccharum"){
+                       start.date = start.date, end.date = end.date, 
+                       coppice.interval = 4, genus = "Saccharum"){
 
   ## These two fns load and downscale are in PEcAn.data.atmosphere 
   ## modules/data.atmosphere/R/temporal.downscaling.R
@@ -88,6 +89,7 @@ run.biocro <- function(lat, lon, met.nc = met.nc, soil.nc = soil.nc,
                                    iRoot=1.0, ifrRhizome=0.01, ifrStem=0.01,
                                    ifrLeaf = 0.0, ifrRoot = 0.0)
           } else {
+            ## Harvest according to coppice cycle, otherwise biomass persists
             iplant[c("iRhizome", "iRoot", "iStem")] <- last(result.yeari[,list(Rhizome, Root, Stem)])
             if ((yeari - min(years))  %% coppice.interval == 0) { # coppice when remainder = 0
               HarvestedYield  <- round(last(result.yeari$Stem) * 0.95, 2)                
