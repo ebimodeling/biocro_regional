@@ -11,12 +11,12 @@ library(BioCro)
 
 ### The following can help during development to load scripts that you are working on.
 ### But clicking the "Source on Save" box above (in Rstudio) is more efficient 
-#devtools::load_all("~/dev/pecan/models/biocro/")
-#devtools::load_all("~/dev/pecan/modules/data.atmosphere/")
-source('~/dev/pecan/modules/data.atmosphere/R/temporal.downscaling.R')
-source('~/dev/pecan/modules/data.atmosphere/R/load.cfmet.R')
-source('~/dev/pecan/modules/data.land/R/land.utils.R')
-source('~/dev/pecan/models/biocro/R/met2model.BIOCRO.R')
+devtools::load_all("~/dev/pecan/models/biocro/")
+devtools::load_all("~/dev/pecan/modules/data.atmosphere/")
+#source('~/dev/pecan/modules/data.atmosphere/R/temporal.downscaling.R')
+#source('~/dev/pecan/modules/data.atmosphere/R/load.cfmet.R')
+#source('~/dev/pecan/modules/data.land/R/land.utils.R')
+#source('~/dev/pecan/models/biocro/R/met2model.BIOCRO.R')
 
 
 
@@ -32,7 +32,11 @@ source('~/dev/pecan/models/biocro/R/met2model.BIOCRO.R')
 
 rundir <- "~/dev/biocro_global/vignettes/"
 ## placeholder for PEcAn config file
-settings <- read.settings(file.path(rundir, "settings.xml"))
+
+## settings files
+## midwest_mxg_settings.xml
+## global_salix_settings.xml
+settings <- read.settings(file.path(rundir, "midwest_mxg_settings.xml"))
 
 ## TODO: Pass lat, lon, start/end date, outdir, met.file, soil parameters in config.xml
 #if(length(arg) == 0){

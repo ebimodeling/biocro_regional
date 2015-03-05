@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<pecan>
+  <outdir>/home/dlebauer/.pecan/biocrotest/</outdir>
+  <pfts>
+    <pft>
+      <name>misp</name>
+    </pft>
+  </pfts>
+  <database>
+    <bety>
+      <user>bety</user>
+      <password>bety</password>
+      <dbname>bety</dbname>
+      <host>ebi-forecast.igb.illinois.edu</host>
+<!--      <dbfiles>$HOME/.pecan/dbfiles</dbfiles>
+      <write>TRUE</write>-->
+  <driver>PostgreSQL</driver>
+    </bety>
+  </database>
+  <meta.analysis>
+    <iter>30000</iter>
+    <random.effects>TRUE</random.effects>
+  </meta.analysis>
+  <ensemble>
+    <size>500</size>
+    <variable>StemBiom</variable>
+ </ensemble>
+    <sensitivity.analysis>
+    <quantiles>
+      <sigma>-3</sigma>
+      <sigma>-2</sigma>
+      <sigma>-1</sigma>
+      <sigma>1</sigma>
+      <sigma>2</sigma>
+      <sigma>3</sigma>
+    </quantiles>
+    <variable>StemBiom</variable>
+  </sensitivity.analysis>-->
+  <model>
+    <type>BIOCRO</type>
+    <id>7</id>
+    <!--<binary>/home/dlebauer/dev/pecan/models/biocro/inst/biocro.Rscript</binary>-->
+  </model>
+  <run>
+    <site>
+      <id>154</id>
+    </site>
+    <inputs>
+      <!--biocluster narr 0.25 degree 3 hr-->
+      <met>/home/groups/ebimodeling/met/narr/threehourly/out/all.nc</met>
+      <!--
+	  ebi-forecast
+	  <met>/home/dlebauer/.pecan/dbfiles/met/all_gfdl-esm2m_hist_1951-2005.nc</met>
+	  <met>/home/share/data/met/cruncep/all.nc</met>
+	  <soil>/home/share/data/soil/hwsd.nc</soil>
+      -->
+    <met>/home/share/data/met/cruncep/out/all_uncompressed.nc</met>
+    <soil>/home/share/data/ebimodeling/soil/global/hwsd/soil_global_hd_filled.nc</soil>
+    </inputs>
+    <start.date>2004-01-05 06:00:00</start.date>
+    <end.date>2004-12-25 05:59:00</end.date>
+    <host> 
+      <name>localhost</name>
+    </host>
+  </run>
+</pecan>
