@@ -63,7 +63,7 @@ ggplot(data = biocro_result) +
 * MAP > 200 mm
 
 ```{r}
-climate_subset <- biocro_result[map > 200 ]
+climate_subset <- biocro_result[map > 200 & mat > 15]
 
 ggplot(data = climate_subset) + 
   geom_tile(aes(lon, lat, fill = yield)) + 
@@ -105,7 +105,7 @@ ggplot(data = notrees) +
   #scale_fill_continuous(colours = rainbow(7)) + 
   worldmap 
 
-ggplot(data = notrees[map > 200]) + 
+ggplot(data = notrop[map > 200]) + 
   geom_raster(aes(lon, lat, fill = yield)) + 
   scale_fill_gradientn(colours = rainbow(7)) + 
   #worldmap + 
