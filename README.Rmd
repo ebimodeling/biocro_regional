@@ -1,6 +1,6 @@
 # Overview 
 
-([view html](http://rawgit.com/ebimodeling/biocro_regional/README.html))
+([view html](http://rawgit.com/ebimodeling/biocro_regional/master/README.html))
 
 Currently, this repository contains settings files for developing the [`globalbiocro.Rscript`](https://github.com/ebimodeling/pecan/blob/biocro-module2/models/biocro/inst/globalbiocro.Rscript) in the PEcAn.BIOCRO package.
 
