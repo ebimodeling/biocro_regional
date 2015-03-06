@@ -70,8 +70,7 @@ download.file("https://www.betydb.org/temp_models/miscanthus_yield_grid.csv", me
 library(data.table)
 mxg <- fread('mxg.csv', skip = 1)
 
-mxg[,
-    `:=` (lcl = round(yield * 0.25, 2),
+mxg[ , `:=` (lcl = round(yield * 0.25, 2),
           ucl = round(yield * 0.5, 2),
           median = round(yield * 0.75, 2),
           yield = NULL)]
