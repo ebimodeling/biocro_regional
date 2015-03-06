@@ -47,11 +47,36 @@ ymd("2014-01-01") - ymd("1700-01-01")
 
 ```sh
 time ncea -F -d time,114321,114686 us_uncompressed.nc us_2013.nc
+time ncea -F -d time,114321,114686 illinois.nc illinois_2013.nc
 ```
 
 #### subset Central Illinois from MsTMIP-NARR drivers
 
 ```sh
 cd /home/groups/ebimodeling/met/narr/threehourly
-time ncks -d lon,-91.5,-87.5 -d lat,37.0,41.5 out/all.nc illinois.nc
+time ncks -d lon,-91.6,-87.4 -d lat,37.0,42.75 out/all.nc illinois.nc
+
+time ncks -d lon,-88.8,-87.7 -d lat,39.8,40.5 out/all.nc champaign.nc
+
+ rsync -routi *.nc ebi-forecast.igb.illinois.edu:.pecan/dbfiles/met/narr/
+```
+
+
+#### Create some example data for initial testing
+
+```r
+download.file("https://www.betydb.org/temp_models/miscanthus_yield_grid.csv", method = 'wget', destfile = 'mxg.csv')
+
+library(data.table)
+mxg <- fread('mxg.csv', skip = 1)
+
+mxg[,
+    `:=` (lcl = round(yield * 0.25, 2),
+          ucl = round(yield * 0.5, 2),
+          median = round(yield * 0.75, 2),
+          yield = NULL)]
+mxg_il <- mxg[lon < -87.4 & lon > -91.6 & lat < 42.75 & lat > 37]
+
+write.csv(mxg_il, 'data/mxg_il_example.csv', row.names = FALSE)
+
 ```
