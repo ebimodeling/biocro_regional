@@ -1,6 +1,6 @@
 # Overview 
 
-([view html](http://rawgit.com/ebimodeling/biocro_regional/master/README.html))
+([view html](http://rawgit.com/ebimodeling/biocro_regional/master/BioCro_runs.html))
 
 Currently, this repository contains settings files for developing the [`globalbiocro.Rscript`](https://github.com/ebimodeling/pecan/blob/biocro-module2/models/biocro/inst/globalbiocro.Rscript) in the PEcAn.BIOCRO package.
 
@@ -48,7 +48,7 @@ ymd("2014-01-01") - ymd("1700-01-01")
 ```
 
 ```{sh}
-time ncea -F -d time,114321,114686 us_uncompressed.nc us_2013.nc
+time ncea -F -d time,114231,114686 us_uncompressed.nc us_2013.nc
 time ncea -F -d time,114321,114686 illinois.nc illinois_2013.nc
 ```
 
@@ -64,7 +64,7 @@ time ncks -d lon,-88.8,-87.7 -d lat,39.8,40.5 out/all.nc champaign.nc
 ```
 
 
-#### Create some example data for initial testing
+## Example Yield Outputs for initial testing
 
 ```{r}
 set.seed(0)
