@@ -10,29 +10,23 @@
     <bety>
       <user>bety</user>
       <password>bety</password>
-      <dbname>bety</dbname>
+      <dbname>ebi_production</dbname>
       <host>ebi-forecast.igb.illinois.edu</host>
-<!--      <dbfiles>$HOME/.pecan/dbfiles</dbfiles>
-      <write>TRUE</write>-->
   <driver>PostgreSQL</driver>
     </bety>
   </database>
   <meta.analysis>
-    <iter>30000</iter>
-    <random.effects>TRUE</random.effects>
+    <iter>1000</iter>
+    <random.effects>FALSE</random.effects>
   </meta.analysis>
   <ensemble>
-    <size>500</size>
+    <size>4</size>
     <variable>StemBiom</variable>
  </ensemble>
     <sensitivity.analysis>
     <quantiles>
-      <sigma>-3</sigma>
-      <sigma>-2</sigma>
       <sigma>-1</sigma>
       <sigma>1</sigma>
-      <sigma>2</sigma>
-      <sigma>3</sigma>
     </quantiles>
     <variable>StemBiom</variable>
   </sensitivity.analysis>-->
@@ -43,24 +37,12 @@
   </model>
   <run>
     <site>
-      <id>154</id>
+      <id>1254</id>
+      <name>Champaign County</name>
     </site>
     <inputs>
-      <!--biocluster narr 0.25 degree 3 hr
-      <met>/home/groups/ebimodeling/met/narr/threehourly/out/all.nc</met>
-      -->
-      <!--
-	  ebi-forecast
-      -->
-            <met>/home/share/data/met/narr/champaign.nc</met>
-    <!--
-    <met>/home/share/data/met/narr/illinois.nc</met>
-	  <met>/home/dlebauer/.pecan/dbfiles/met/all_gfdl-esm2m_hist_1951-2005.nc</met>
-	  <met>/home/share/data/met/cruncep/all.nc</met>
-	  <soil>/home/share/data/soil/hwsd.nc</soil>
-      -->
-    <met>/home/share/data/met/cruncep/out/all_uncompressed.nc</met>
-    <soil>/home/share/data/ebimodeling/soil/global/hwsd/soil_global_hd_filled.nc</soil>
+    <met>/home/share/data/met/narr/champaign.nc</met>
+    <soil>/home/share/data/soil/hwsd.nc</soil>
     </inputs>
     <start.date>2004-01-05 06:00:00</start.date>
     <end.date>2004-12-25 05:59:00</end.date>

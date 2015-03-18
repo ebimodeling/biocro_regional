@@ -39,27 +39,14 @@
   <model>
     <type>BIOCRO</type>
     <id>7</id>
-    <!--<binary>/home/dlebauer/dev/pecan/models/biocro/inst/biocro.Rscript</binary>-->
   </model>
   <run>
     <site>
-      <id>154</id>
+      <id>995</id>
+      <name>Illinois</name>
     </site>
     <inputs>
-      <!--biocluster narr 0.25 degree 3 hr
-      <met>/home/groups/ebimodeling/met/narr/threehourly/out/all.nc</met>
-      -->
-      <!--
-	  ebi-forecast
-      -->
-            <met>/home/share/data/met/narr/champaign.nc</met>
-    <!--
     <met>/home/share/data/met/narr/illinois.nc</met>
-	  <met>/home/dlebauer/.pecan/dbfiles/met/all_gfdl-esm2m_hist_1951-2005.nc</met>
-	  <met>/home/share/data/met/cruncep/all.nc</met>
-	  <soil>/home/share/data/soil/hwsd.nc</soil>
-      -->
-    <met>/home/share/data/met/cruncep/out/all_uncompressed.nc</met>
     <soil>/home/share/data/ebimodeling/soil/global/hwsd/soil_global_hd_filled.nc</soil>
     </inputs>
     <start.date>2004-01-05 06:00:00</start.date>
