@@ -43,7 +43,8 @@
   </model>
   <run>
     <site>
-      <id>154</id>
+      <name>Midwest Mxg Simulation Region</name>
+      <!-- <id> </id> enter after defined -->
     </site>
     <inputs>
       <!--biocluster narr 0.25 degree 3 hr
