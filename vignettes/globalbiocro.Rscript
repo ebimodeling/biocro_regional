@@ -9,37 +9,15 @@ library(PEcAn.all)
 library(PEcAn.BIOCRO)
 library(BioCro)
 
-### The following can help during development to load scripts that you are working on.
-### But clicking the "Source on Save" box above (in Rstudio) is more efficient 
-devtools::load_all("~/dev/pecan/models/biocro/")
-devtools::load_all("~/dev/pecan/modules/data.atmosphere/")
-#source('~/dev/pecan/modules/data.atmosphere/R/temporal.downscaling.R')
-#source('~/dev/pecan/modules/data.atmosphere/R/load.cfmet.R')
-#source('~/dev/pecan/modules/data.land/R/land.utils.R')
-#source('~/dev/pecan/models/biocro/R/met2model.BIOCRO.R')
-
-
-
-### loop around earth here
-# arg   <- commandArgs(trailingOnly = TRUE)
-# rundir <- args[1]
-# outdir <- args[2]
-# if(interactive()) {
-#   runid <- tail(readLines(file.path(settings$rundir, "runs.txt"), n=1))
-#   rundir <- file.path(settings$rundir, runid)
-#   outdir <- file.path(settings$outdir, "out", runid)
-# }
-
-rundir <- "~/dev/biocro_global/vignettes/"
+rundir <- "~/dev/biocro_regional/vignettes/"
 ## placeholder for PEcAn config file
 
 ## settings files
-## midwest_mxg_settings.xml
+## [champaign, illinois, midwest]_mxg_settings.xml
 ## global_salix_settings.xml
-settings <- read.settings(file.path(rundir, "midwest_mxg_settings.xml"))
+settings <- read.settings(file.path(rundir, "champaign_mxg_settings.xml"))
 
 ## TODO: Pass lat, lon, start/end date, outdir, met.file, soil parameters in config.xml
-#if(length(arg) == 0){
 start.date <- ceiling_date(as.POSIXct(settings$run$start.date), "day")
 end.date <- floor_date(as.POSIXct(settings$run$end.date), "day")
 outdir <- settings$outdir
@@ -48,12 +26,18 @@ met.nc  <- nc_open(settings$run$inputs$met)
 soil.nc <- nc_open(settings$run$inputs$soil)
 # atmco2.nc <- nc_open(file.path(inputdir, "co2/CO2_Global_HD_v1.nc"))
 
-lat <- settings$run$site$lat
-lon <- settings$run$site$lon
-config <- read.config.BIOCRO("~/dev/biocro_global/vignettes/config.xml")
+lat <- ncvar_get(met.nc, "lat")
+lon <- ncvar_get(met.nc, "lon")
+latlon <- expand.grid(lat = lat, lon = lon)
+
+pft <- settings$pfts$pft$name
+config <- xmlParse(file.path(rundir, "misp_config.xml"))
 
 run.biocro <- function(lat, lon, met.nc = met.nc, soil.nc = soil.nc, 
-                       start.date = start.date, end.date = end.date, coppice.interval = 4, genus = "Saccharum"){
+                       settings = settings, # should write start.date, end.date, met to config
+                       config = config,
+                       coppice.interval = 1, 
+                       ){
 
   ## These two fns load and downscale are in PEcAn.data.atmosphere 
   ## modules/data.atmosphere/R/temporal.downscaling.R
