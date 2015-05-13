@@ -15,7 +15,7 @@ Open and read in settings file for PEcAn run.
 
 
 ```{r, echo=FALSE, eval = FALSE, warning=FALSE}
-db.showQueries(show = TRUE)
+#db.showQueries(show = TRUE)
 
 settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/champaign_mxg_settings.xml")
 

@@ -20,20 +20,20 @@
     <random.effects>FALSE</random.effects>
   </meta.analysis>
   <ensemble>
-    <size>4</size>
+    <size>500</size>
     <variable>StemBiom</variable>
  </ensemble>
     <sensitivity.analysis>
-    <quantiles>
+<!--    <quantiles>
       <sigma>-1</sigma>
       <sigma>1</sigma>
-    </quantiles>
+    </quantiles>-->
     <variable>StemBiom</variable>
   </sensitivity.analysis>-->
   <model>
     <type>BIOCRO</type>
     <id>7</id>
-    <!--<binary>/home/dlebauer/dev/pecan/models/biocro/inst/biocro.Rscript</binary>-->
+    <binary>/home/dlebauer/dev/pecan/models/biocro/inst/biocro.Rscript</binary>
   </model>
   <run>
     <site>
@@ -41,8 +41,8 @@
       <name>Champaign County</name>
     </site>
     <inputs>
-    <met>/home/share/data/met/narr/champaign.nc</met>
-    <soil>/home/share/data/soil/hwsd.nc</soil>
+    <met>/home/dlebauer/.pecan/dbfiles/met/narr/threehourly/illinois.nc</met>
+    <soil>/home/dlebauer/.pecan/dbfiles/soil/hwsd.nc</soil>
     </inputs>
     <start.date>2004-01-05 06:00:00</start.date>
     <end.date>2004-12-25 05:59:00</end.date>
