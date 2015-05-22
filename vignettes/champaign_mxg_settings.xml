@@ -41,8 +41,13 @@
       <name>Champaign County</name>
     </site>
     <inputs>
-    <met>/home/dlebauer/.pecan/dbfiles/met/narr/threehourly/illinois.nc</met>
-    <soil>/home/dlebauer/.pecan/dbfiles/soil/hwsd.nc</soil>
+      <met>
+        <!--<id>300</id>illinois.nc-->
+        <id>299</id><!--champaign.nc-->
+      </met>
+      <soil>
+        <id>303</id><!--hwsd.nc-->
+      </soil>
     </inputs>
     <start.date>2004-01-05 06:00:00</start.date>
     <end.date>2004-12-25 05:59:00</end.date>
