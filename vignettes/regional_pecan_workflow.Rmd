@@ -25,7 +25,6 @@ settings$pfts <- get.trait.data(pfts = settings$pfts,
                                 dbfiles = settings$run$dbfiles, 
                                 database = settings$database$bety, 
                                 forceupdate = "AUTO") 
-#settings$meta.analysis$random.effects <- FALSE
 run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
                   iterations = settings$meta.analysis$iter, 
                   dbfiles = settings$run$dbfiles, 

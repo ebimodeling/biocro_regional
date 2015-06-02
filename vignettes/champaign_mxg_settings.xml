@@ -20,20 +20,20 @@
     <random.effects>FALSE</random.effects>
   </meta.analysis>
   <ensemble>
-    <size>500</size>
+    <size>5</size>
     <variable>StemBiom</variable>
  </ensemble>
-    <sensitivity.analysis>
-<!--    <quantiles>
+<!--    <sensitivity.analysis>
+    <quantiles>
       <sigma>-1</sigma>
       <sigma>1</sigma>
-    </quantiles>-->
+    </quantiles>
     <variable>StemBiom</variable>
   </sensitivity.analysis>-->
   <model>
     <type>BIOCRO</type>
-    <id>7</id>
-    <binary>/home/dlebauer/dev/pecan/models/biocro/inst/biocro.Rscript</binary>
+    <id>12</id>
+    <binary>/home/dlebauer/dev/pecan/models/biocro/inst/regionalbiocro.Rscript</binary>
   </model>
   <run>
     <site>
@@ -52,7 +52,10 @@
     <start.date>2004-01-05 06:00:00</start.date>
     <end.date>2004-12-25 05:59:00</end.date>
     <host> 
-      <name>localhost</name>
+      <name>ebi-forecast.igb.illinois.edu</name>
+      <!--<qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+      <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
+      <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>-->
     </host>
   </run>
 </pecan>
