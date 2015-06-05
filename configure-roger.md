@@ -7,7 +7,7 @@ XML:  libxml2/2.9.1
   * (older versions of libxml cause segfault https://github.com/PecanProject/pecan/issues/476)
 
 
-Add to `~/.bashrc`
+Add to `~/.bash_profile` ([example](https://github.com/dlebauer/dotfiles/blob/master/bash_profile))
 
 ```sh
 export R_LIBS_USER=~/R/library
