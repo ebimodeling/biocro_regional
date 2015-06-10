@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <pecan>
-  <outdir>/home/dlebauer/.pecan/biocrotest/</outdir>
+  <outdir>~/.pecan/biocrotest/</outdir>
   <pfts>
     <pft>
-      <name>misp</name>
+      <name>Miscanthus_x_giganteus</name>
     </pft>
   </pfts>
   <database>
@@ -16,24 +16,35 @@
     </bety>
   </database>
   <meta.analysis>
-    <iter>1000</iter>
-    <random.effects>FALSE</random.effects>
+    <iter>10000</iter>
+    <random.effects>TRUE</random.effects>
+    <update>TRUE</update>
   </meta.analysis>
   <ensemble>
-    <size>5</size>
+    <size>50</size>
+    <variable>Yield</variable>
+    <variable>TVeg</variable>
+    <variable>RootBiom</variable>
     <variable>StemBiom</variable>
  </ensemble>
-<!--    <sensitivity.analysis>
+ <sensitivity.analysis>
     <quantiles>
+    <!--  <sigma>-3</sigma>
+      <sigma>-2</sigma>-->
       <sigma>-1</sigma>
       <sigma>1</sigma>
+    <!--  <sigma>2</sigma>
+      <sigma>3</sigma>-->
     </quantiles>
+    <variable>Yield</variable>
+    <variable>TVeg</variable>
+    <variable>RootBiom</variable>
     <variable>StemBiom</variable>
-  </sensitivity.analysis>-->
+  </sensitivity.analysis>
   <model>
     <type>BIOCRO</type>
     <id>12</id>
-    <binary>/home/dlebauer/dev/pecan/models/biocro/inst/regionalbiocro.Rscript</binary>
+    <!--<binary>/home/a-m/dlebauer/dev/pecan/models/biocro/inst/regionalbiocro.Rscript</binary>-->
   </model>
   <run>
     <site>
@@ -49,13 +60,13 @@
         <id>303</id><!--hwsd.nc-->
       </soil>
     </inputs>
-    <start.date>2004-01-05 06:00:00</start.date>
-    <end.date>2004-12-25 05:59:00</end.date>
+    <start.date>1995-01-05 06:00:00</start.date>
+    <end.date>2010-12-25 05:59:00</end.date>
     <host> 
-      <name>ebi-forecast.igb.illinois.edu</name>
-      <!--<qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+      <name>roger-login.ncsa.illinois.edu</name>
+      <qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
-      <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>-->
+      <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
     </host>
   </run>
 </pecan>

@@ -19,14 +19,14 @@ Open and read in settings file for PEcAn run.
 ```{r, echo=FALSE, eval = FALSE, warning=FALSE}
 #db.showQueries(show = TRUE)
 
-settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/biocluster-champaign_mxg_settings.xml")
+settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/champaign_mxg_settings.xml")
 
 settings <- read.settings(settings.file)
 settings$pfts <- get.trait.data(pfts = settings$pfts, 
                                 modeltype = "BIOCRO", 
                                 dbfiles = settings$run$dbfiles ,
                                 database = settings$database$bety, 
-                                forceupdate = "AUTO") 
+                                forceupdate = "TRUE") 
 run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
                   iterations = settings$meta.analysis$iter, 
                   dbfiles = settings$run$dbfiles, 
@@ -35,7 +35,7 @@ run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
 run.write.configs(settings, settings$database$bety$write)
 start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 
-settings$sensitivity.analysis$variable <- settings$ensemble$variable <- "TVeg"
+#settings$sensitivity.analysis$variable <- settings$ensemble$variable <- "TVeg"
 get.results(settings = settings)
 
 run.sensitivity.analysis()      # Run sensitivity analysis and variance decomposition on model output
