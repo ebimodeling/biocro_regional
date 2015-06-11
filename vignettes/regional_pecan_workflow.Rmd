@@ -26,7 +26,7 @@ settings$pfts <- get.trait.data(pfts = settings$pfts,
                                 modeltype = "BIOCRO", 
                                 dbfiles = settings$run$dbfiles ,
                                 database = settings$database$bety, 
-                                forceupdate = "TRUE") 
+                                forceupdate = "AUTO") 
 run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
                   iterations = settings$meta.analysis$iter, 
                   dbfiles = settings$run$dbfiles, 

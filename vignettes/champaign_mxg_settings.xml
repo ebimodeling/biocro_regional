@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <pecan>
-  <outdir>~/.pecan/biocrotest/</outdir>
+  <outdir>/home/dlebauer/.pecan/biocrotest/</outdir>
   <pfts>
     <pft>
       <name>Miscanthus_x_giganteus</name>
@@ -21,7 +21,7 @@
     <update>TRUE</update>
   </meta.analysis>
   <ensemble>
-    <size>50</size>
+    <size>1</size>
     <variable>Yield</variable>
     <variable>TVeg</variable>
     <variable>RootBiom</variable>
@@ -60,8 +60,8 @@
         <id>303</id><!--hwsd.nc-->
       </soil>
     </inputs>
-    <start.date>1995-01-05 06:00:00</start.date>
-    <end.date>2010-12-25 05:59:00</end.date>
+    <start.date>1990-01-01 00:00:00</start.date>
+    <end.date>2009-12-31 23:59:59</end.date>
     <host> 
       <name>roger-login.ncsa.illinois.edu</name>
       <qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
