@@ -17,7 +17,6 @@ Open and read in settings file for PEcAn run.
 
 
 ```{r, echo=FALSE, eval = FALSE, warning=FALSE}
-#db.showQueries(show = TRUE)
 
 settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/champaign_mxg_settings.xml")
 
@@ -41,4 +40,24 @@ get.results(settings = settings)
 run.sensitivity.analysis()      # Run sensitivity analysis and variance decomposition on model output
 
 run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on model output. 
+```
+
+### Analysis for CyberGIS Demo
+
+```{r}
+library(data.table)
+library(ggplot2)
+
+7829:7897
+
+files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+allout <- list()
+for(file in files$filename){
+  load(file)
+  
+}
+
+
+
+
 ```
