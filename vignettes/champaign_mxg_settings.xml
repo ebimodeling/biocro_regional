@@ -21,7 +21,7 @@
     <update>TRUE</update>
   </meta.analysis>
   <ensemble>
-    <size>10</size>
+    <size>500</size>
     <variable>Yield</variable>
     <variable>TVeg</variable>
     <variable>RootBiom</variable>
@@ -66,7 +66,7 @@
     <end.date>2009-12-31 23:59:59</end.date>
     <host> 
       <name>roger-login.ncsa.illinois.edu</name>
-      <qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+      <qsub>qsub -l walltime=03:00:00 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
       <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
     </host>
