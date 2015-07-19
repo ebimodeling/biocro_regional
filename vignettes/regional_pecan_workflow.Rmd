@@ -48,16 +48,34 @@ run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on m
 library(data.table)
 library(ggplot2)
 
-7829:7897
-
-files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+files <- data.table(run = 9982:10481)
+#files <- fread("../run/runs.txt")
 allout <- list()
-for(file in files$filename){
-  load(file)
-  
+for(i in 1:length(files$run)){
+  run <- files$run[i]
+  filename = file.path("~/pecan_remote/205/out", run, "annual.result.RData")
+  load(filename)
+  allout[[i]] <- cbind(run = run, annual.result[, list(lat, lon, year, yield = Stem + Leaf)])
+  rm(annual.result)
 }
 
+all <- rbindlist(allout)
+save(all, file = "output/illinois_ensemble.RData")
+write.csv(all, file = "output/illinois_ensemble.csv", row.names = FALSE)
+
+range <- all[,list(mean = mean(yield)), by = 'lat,lon,year'][,list(range = max(mean) - min(mean)), by = 'lat,lon']
 
 
+library(ggplot2)
+library(maps)
+illinois <- borders("county", "illinois", colour = "white")
 
+theme_set(theme_minimal())
+ggplot(data=stats) + geom_tile(aes(lon,lat, fill = mean)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+ggplot(data=range) + geom_tile(aes(lon,lat, fill = range)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+mean_timeseries <- all[,list(median = median(yield)), by = 'lat,lon,year']
+ggplot(data = mean_timeseries)+ geom_tile(aes(lon,lat, fill = median)) +   scale_fill_gradientn(colours = rainbow(4)) + illinois + facet_wrap(~year)
 ```
+
