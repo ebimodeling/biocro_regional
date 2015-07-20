@@ -48,16 +48,11 @@ run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on m
 library(data.table)
 library(ggplot2)
 
-7829:7897
-
 files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
 allout <- list()
 for(file in files$filename){
   load(file)
   
 }
-
-
-
 
 ```
