@@ -48,8 +48,10 @@ run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on m
 library(data.table)
 library(ggplot2)
 
+
 files <- data.table(run = 9982:10481)
-#files <- fread("../run/runs.txt")
+#files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+
 allout <- list()
 for(i in 1:length(files$run)){
   run <- files$run[i]
@@ -59,12 +61,44 @@ for(i in 1:length(files$run)){
   rm(annual.result)
 }
 
+
 all <- rbindlist(allout)
 save(all, file = "output/illinois_ensemble.RData")
 write.csv(all, file = "output/illinois_ensemble.csv", row.names = FALSE)
 
 range <- all[,list(mean = mean(yield)), by = 'lat,lon,year'][,list(range = max(mean) - min(mean)), by = 'lat,lon']
 
+```
+
+
+### Calibration Runs
+
+```{r}
+
+library(traits)
+library(dplyr)
+library(data.table)
+psql_bety <- src_postgres(dbname = "bety", host = "localhost", user = "bety", password = "bety")
+
+sites <- tbl(psql_bety, 
+             sql(" select  id, st_y(st_centroid(sites.geometry)) AS lat, st_x(st_centroid(sites.geometry)) AS lon from sites"))
+
+mxg_yield <- tbl(psql_bety, "yields") %>% 
+  left_join(tbl(psql_bety, "species"), by = c("specie_id" = 'id')) %>% 
+  left_join(tbl(psql_bety, 'treatments'), by = c('treatment_id' = 'id')) %>% 
+  left_join(tbl(psql_bety, "sites")) %>% left_join(sites) %>% 
+  select(one_of(c('lat', 'lon', 'date', 'mean', 'statname', 'stat', 'n', 'genus', 'species', 'scientificname')), ends_with("_id"))
+
+mgmts <- tbl(psql_bety, "managements") %>% left_join(tbl(psql_bety, "managements_treatments"), c("id" = "management_id"))  %>% select(-matches("_at"), -starts_with("id"), -starts_with("user"))
+
+planting <- filter(mgmts, mgmttype == "planting")
+
+mxg_yield %>% left_join(planting, by = 'treatment_id')
+mxg_trt <- distinct(mxg_sites, treatment_id) %>% select(treatment_id) %>% na.omit()
+
+
+mxg <- mgmts %>% filter(treatment_id %in% mxg_trt$treatment_id)
+filter(mxg, mgmttype == "planting")
 
 library(ggplot2)
 library(maps)
