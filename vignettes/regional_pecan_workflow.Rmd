@@ -184,6 +184,60 @@ dev.off()
 
 ```
 
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
 
 ### Calibration Runs
 
