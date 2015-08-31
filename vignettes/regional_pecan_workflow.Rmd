@@ -68,6 +68,12 @@ write.csv(all, file = "output/illinois_ensemble.csv", row.names = FALSE)
 
 range <- all[,list(mean = mean(yield)), by = 'lat,lon,year'][,list(range = max(mean) - min(mean)), by = 'lat,lon']
 
+ranks <- all[, list(mean = mean(yield)), by = run][order(mean), ]
+#ranks[5*(1:100) - 2]
+sampled.runs <- ranks[5*(1:100)-2]
+
+merge(sampled.runs[, list(run)], all, by = 'run', all.x = TRUE, all.y = FALSE)
+
 ```
 
 
