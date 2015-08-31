@@ -18,7 +18,7 @@ Files are on ebi-forecast in `/home/share/data/`, on biocluster in `/home/groups
 
 There is a branch for use on biocluster and one for use on ebi-forecast. 
 
-### Notse on driver files
+### Notes on driver files
 
 (do this on a slave node `qsub -I`)
 

@@ -18,7 +18,7 @@ Open and read in settings file for PEcAn run.
 
 ```{r, echo=FALSE, eval = FALSE, warning=FALSE}
 
-settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/champaign_mxg_settings.xml")
+settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/illinois_mxg_settings.xml")
 
 settings <- read.settings(settings.file)
 settings$pfts <- get.trait.data(pfts = settings$pfts, 
@@ -32,6 +32,8 @@ run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
                   database = settings$database$bety)
 
 run.write.configs(settings, settings$database$bety$write)
+
+settings$run$host$qsub <- "qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@"
 start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 
 #settings$sensitivity.analysis$variable <- settings$ensemble$variable <- "TVeg"

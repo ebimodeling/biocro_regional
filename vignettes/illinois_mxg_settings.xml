@@ -10,9 +10,9 @@
     <bety>
       <user>bety</user>
       <password>bety</password>
-      <dbname>ebi_production</dbname>
-      <host>ebi-forecast.igb.illinois.edu</host>
-  <driver>PostgreSQL</driver>
+      <dbname>bety</dbname>
+      <host>localhost</host>
+      <driver>PostgreSQL</driver>
     </bety>
   </database>
   <meta.analysis>
@@ -21,7 +21,7 @@
     <update>TRUE</update>
   </meta.analysis>
   <ensemble>
-    <size>50</size>
+    <size>500</size>
     <variable>Yield</variable>
     <variable>TVeg</variable>
     <variable>RootBiom</variable>
@@ -29,12 +29,12 @@
  </ensemble>
  <sensitivity.analysis>
     <quantiles>
-    <!--  <sigma>-3</sigma>
-      <sigma>-2</sigma>-->
+      <sigma>-3</sigma>
+      <sigma>-2</sigma>
       <sigma>-1</sigma>
       <sigma>1</sigma>
-    <!--  <sigma>2</sigma>
-      <sigma>3</sigma>-->
+      <sigma>2</sigma>
+      <sigma>3</sigma>
     </quantiles>
     <variable>Yield</variable>
     <variable>TVeg</variable>
@@ -63,10 +63,11 @@
       </soil>
     </inputs>
     <start.date>1990-01-01 00:00:00</start.date>
-    <end.date>2010-12-31 23:59:59</end.date>
+    <end.date>2009-12-31 23:59:59</end.date>
     <host> 
       <name>roger-login.ncsa.illinois.edu</name>
-      <qsub>qsub -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+      <!--<name>biocluster.igb.illinois.edu</name>-->
+      <qsub>qsub -l walltime=03:00:00,nodes=1:ppn=1 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
       <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
     </host>
