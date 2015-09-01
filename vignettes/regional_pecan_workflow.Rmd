@@ -50,12 +50,193 @@ run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on m
 library(data.table)
 library(ggplot2)
 
-files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+
+files <- data.table(run = 9982:10481)
+#files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+
 allout <- list()
-for(file in files$filename){
-  load(file)
-  
+for(i in 1:length(files$run)){
+  run <- files$run[i]
+  filename = file.path("~/pecan_remote/205/out", run, "annual.result.RData")
+  load(filename)
+  allout[[i]] <- cbind(run = run, annual.result[, list(lat, lon, year, yield = Stem + Leaf)])
+  rm(annual.result)
 }
+
+
+all <- rbindlist(allout)
+save(all, file = "output/illinois_ensemble.RData")
+write.csv(all, file = "output/illinois_ensemble.csv", row.names = FALSE)
+
+range <- all[,list(mean = mean(yield)), by = 'lat,lon,year'][,list(range = max(mean) - min(mean)), by = 'lat,lon']
+
+ranks <- all[, list(mean = mean(yield)), by = run][order(mean), ]
+#ranks[5*(1:100) - 2]
+sampled.runs <- ranks[5*(1:100)-2]
+
+merge(sampled.runs[, list(run)], all, by = 'run', all.x = TRUE, all.y = FALSE)
+
+```
+
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
 
 ```
 
@@ -239,7 +420,6 @@ f <- function(x){
   tmp$outdir <- file.path(rundir)
   tmp$run$host$rundir <- file.path(rundir, "run")
   tmp$run$host$outdir <- file.path(rundir, "out")
-  tmp$run$inputs$met <- NULL
   tmp$run$site <- sites[[x]]
   tmp$run$start.date <- runs[[x]]$start
   tmp$run$end.date <- runs[[x]]$end
@@ -263,8 +443,6 @@ names(settings.files) <- sitenames$sitename
 save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 ```
 
-
-
 ```{r pecan-calibration-workflow}
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
@@ -287,3 +465,25 @@ for(settings.file in settings.files[[1]]){
 }
   
 ```
+
+
+```{r}
+
+mxg <- mgmts %>% filter(treatment_id %in% mxg_trt$treatment_id)
+filter(mxg, mgmttype == "planting")
+
+
+library(ggplot2)
+library(maps)
+illinois <- borders("county", "illinois", colour = "white")
+
+theme_set(theme_minimal())
+ggplot(data=stats) + geom_tile(aes(lon,lat, fill = mean)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+ggplot(data=range) + geom_tile(aes(lon,lat, fill = range)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+mean_timeseries <- all[,list(median = median(yield)), by = 'lat,lon,year']
+ggplot(data = mean_timeseries)+ geom_tile(aes(lon,lat, fill = median)) +   scale_fill_gradientn(colours = rainbow(4)) + illinois + facet_wrap(~year)
+```
+
+
