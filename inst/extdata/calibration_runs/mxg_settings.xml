@@ -55,8 +55,7 @@
     </site>
     <inputs>
       <met>
-        <id>300</id>illinois.nc
-        <!--<id>299</id>champaign.nc-->
+        <id>300</id>
       </met>
       <soil>
         <id>303</id><!--hwsd.nc-->

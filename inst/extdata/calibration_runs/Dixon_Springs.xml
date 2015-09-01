@@ -53,6 +53,9 @@
    <lon>-88.67</lon>
   </site>
   <inputs>
+   <met>
+    <id>300</id>
+   </met>
    <soil>
     <id>303</id>
     <comment></comment>
