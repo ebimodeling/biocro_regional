@@ -18,7 +18,7 @@ Open and read in settings file for PEcAn run.
 
 ```{r, echo=FALSE, eval = FALSE, warning=FALSE}
 
-settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/champaign_mxg_settings.xml")
+settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/illinois_mxg_settings.xml")
 
 settings <- read.settings(settings.file)
 settings$pfts <- get.trait.data(pfts = settings$pfts, 
@@ -32,6 +32,8 @@ run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
                   database = settings$database$bety)
 
 run.write.configs(settings, settings$database$bety$write)
+
+settings$run$host$qsub <- "qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@"
 start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 
 #settings$sensitivity.analysis$variable <- settings$ensemble$variable <- "TVeg"
@@ -48,12 +50,31 @@ run.ensemble.analysis(plot.timeseries=TRUE)  	      # Run ensemble analysis on m
 library(data.table)
 library(ggplot2)
 
-files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+
+files <- data.table(run = 9982:10481)
+#files <- fread("../run/runs.txt")[, list(filename = file.path(V1, "biocro_output.RData"))]
+
 allout <- list()
-for(file in files$filename){
-  load(file)
-  
+for(i in 1:length(files$run)){
+  run <- files$run[i]
+  filename = file.path("~/pecan_remote/205/out", run, "annual.result.RData")
+  load(filename)
+  allout[[i]] <- cbind(run = run, annual.result[, list(lat, lon, year, yield = Stem + Leaf)])
+  rm(annual.result)
 }
+
+
+all <- rbindlist(allout)
+save(all, file = "output/illinois_ensemble.RData")
+write.csv(all, file = "output/illinois_ensemble.csv", row.names = FALSE)
+
+range <- all[,list(mean = mean(yield)), by = 'lat,lon,year'][,list(range = max(mean) - min(mean)), by = 'lat,lon']
+
+ranks <- all[, list(mean = mean(yield)), by = run][order(mean), ]
+#ranks[5*(1:100) - 2]
+sampled.runs <- ranks[5*(1:100)-2]
+
+merge(sampled.runs[, list(run)], all, by = 'run', all.x = TRUE, all.y = FALSE)
 
 ```
 
@@ -111,34 +132,358 @@ dev.off()
 
 ```
 
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("~/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
+### Climate
+
+```{r climate-summary}
+library(data.table)
+library(ggplot2)
+
+# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
+load("/home/dlebauer/biocro_output.RData")
+theme_set(theme_bw())
+
+z <- biocro_result[lat == 40.875 & lon == -87.875 ]
+zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
+
+pdf("il_climate.pdf")
+
+ggplot(data = zz, 
+       aes(doy, gdd, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative GDD")
+
+ggplot(data = zz, 
+       aes(doy, p, group = year, color = lowyields)) + 
+  geom_line() + 
+  ggtitle("Cumulative Precipitation")
+
+
+
+zz <- biocro_result[ , list(
+  p = max(cumsum(precip)), 
+  gdd = max(cumsum((tmax + tmin)/2))), 
+  by = 'year,lat,lon']
+
+zz[,`:=`( 
+  # that frown `:=`( 
+  #    is crazy syntax for 'add new variable'
+  #    this is the data.table package. 
+  #    Its great for this and many other reasons, 
+  #    but dplyr is easier to learn and read
+  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
+
+ggplot(data = zzz, aes(x = year, y = p)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("total annual precip, by latitude")
+
+ggplot(data = zzz, aes(x = year, y = gdd)) + 
+  geom_line(aes(color = factor(lat))) + 
+  ggtitle("gdd, by latitude")
+
+dev.off()
+
+
+
+```
+
 
 ### Calibration Runs
 
-```{r}
-
-library(traits)
+```{r il-mxg-calibration-sites}
 library(dplyr)
 library(data.table)
-psql_bety <- src_postgres(dbname = "bety", host = "localhost", user = "bety", password = "bety")
+library(ggplot2)
+d <- list(host = 'ebi-forecast.igb.illinois.edu',
+          dbname = 'ebi_production',
+          user = 'bety',
+          password = 'bety')
+bety <- src_postgres(host = d$host, user = d$user, password = d$password, dbname = d$dbname)
 
-sites <- tbl(psql_bety, 
-             sql(" select  id, st_y(st_centroid(sites.geometry)) AS lat, st_x(st_centroid(sites.geometry)) AS lon from sites"))
+species <- tbl(bety, 'species') %>% 
+  mutate(specie_id = id) %>% 
+  select(specie_id, scientificname, genus) 
 
-mxg_yield <- tbl(psql_bety, "yields") %>% 
-  left_join(tbl(psql_bety, "species"), by = c("specie_id" = 'id')) %>% 
-  left_join(tbl(psql_bety, 'treatments'), by = c('treatment_id' = 'id')) %>% 
-  left_join(tbl(psql_bety, "sites")) %>% left_join(sites) %>% 
-  select(one_of(c('lat', 'lon', 'date', 'mean', 'statname', 'stat', 'n', 'genus', 'species', 'scientificname')), ends_with("_id"))
+sites <- tbl(bety, sql(
+  paste("select id as site_id, st_y(st_centroid(sites.geometry)) AS lat,",
+        "st_x(st_centroid(sites.geometry)) AS lon,",
+        " sitename, city, country from sites"))
+  )
 
-mgmts <- tbl(psql_bety, "managements") %>% left_join(tbl(psql_bety, "managements_treatments"), c("id" = "management_id"))  %>% select(-matches("_at"), -starts_with("id"), -starts_with("user"))
+citations <- tbl(bety, 'citations') %>%
+  select(citation_id = id, author, year, title)
 
-planting <- filter(mgmts, mgmttype == "planting")
+yields <- tbl(bety, 'yields') %>%
+  select(id, date, mean, statname, stat, site_id, specie_id, treatment_id, citation_id) %>% 
+  left_join(species, by = 'specie_id') %>%
+  left_join(sites, by = 'site_id') %>% 
+  left_join(citations, by = 'citation_id')
 
-mxg_yield %>% left_join(planting, by = 'treatment_id')
-mxg_trt <- distinct(mxg_sites, treatment_id) %>% select(treatment_id) %>% na.omit()
+
+managements_treatments <- tbl(bety, 'managements_treatments') %>%
+  select(treatment_id, management_id)
+
+treatments <- tbl(bety, 'treatments') %>% mutate(treatment_id = id) %>% 
+  select(treatment_id, name, definition, control)
+
+managements <- tbl(bety, 'managements') %>%
+  filter(mgmttype %in% c('fertilizer_N', 'fertilizer_N_rate', 'planting', 'irrigation')) %>%
+  mutate(management_id = id) %>%
+  select(management_id, date, mgmttype, level, units) %>%
+  left_join(managements_treatments, by = 'management_id') %>%
+  left_join(treatments, by = 'treatment_id') 
+
+
+nitrogen <- managements %>% 
+  filter(mgmttype == "fertilizer_N_rate") %>%
+  select(treatment_id, nrate = level)
+
+planting <- managements %>% filter(mgmttype == "planting") %>%
+  select(treatment_id, planting_date = date)
+
+irrigation <- managements %>% 
+  filter(mgmttype == 'irrigation') 
+
+irrigation_rate <- irrigation %>% 
+  filter(units == 'mm', !is.na(treatment_id)) %>% 
+  group_by(treatment_id, year = sql("extract(year from date)"), units) %>% 
+  summarise(irrig.mm = sum(level)) %>% 
+  group_by(treatment_id) %>% 
+  summarise(irrig.mm.y = mean(irrig.mm))
+
+irrigation_boolean <- irrigation %>%
+  collect %>%   
+  group_by(treatment_id) %>% 
+  mutate(irrig = as.logical(mean(level))) %>% 
+  select(treatment_id, irrig = irrig)
+
+irrigation_all <- irrigation_boolean %>% full_join(irrigation_rate, copy = TRUE)
+
+grass_yields <- yields %>% 
+  filter(genus %in% c('Miscanthus', 'Panicum')) %>%
+  left_join(nitrogen, by = 'treatment_id') %>%
+  left_join(planting, by = 'treatment_id') %>%
+  left_join(irrigation_all, by = 'treatment_id', copy = TRUE)
+```
+
+
+## BioCro Calibration
+
+```{r biocro-calibration-sites}
+require(lubridate)
+require(XML)
+require(stringr)
+listToXml <- PEcAn.utils::listToXml
+
+il_mxg <- grass_yields %>% 
+  collect %>% 
+  select(-year) %>% #publication year
+  mutate(year = year(ymd(date))) %>% 
+  filter(author == "Arundale" & 
+           genus == "Miscanthus" & 
+           lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5
+  ) %>% 
+  select(site_id, sitename, lat, lon, year) %>% distinct %>%# arrange(lat,lon,year) %>% 
+  group_by(sitename, site_id, lat, lon) %>% 
+  distinct %>% 
+  mutate(start = ymd(paste(min(year), "01", "01", sep = '-')), 
+            end = ymd(paste(max(year), "12", "31", sep = '-')))  %>% 
+  as.data.frame
+
+sitenames <- il_mxg %>% 
+  mutate(sitename = gsub("-", "", gsub("of ","",sitename))) %>%
+  mutate(sitename = gsub(" ", "_", word(sitename, 1, 2))) %>% 
+  select(sitename)
+
+sites <- split(il_mxg %>% select(id = site_id, lat, lon), 
+               f = 1:nrow(il_mxg))
+runs  <- split(il_mxg %>% select(start, end), 
+               f = 1:nrow(il_mxg))
+names(runs) <- names(sites) <- sitenames$sitename
+
+settings <- list()
+settings.dir <- "/home/dlebauer/dev/biocro_regional/inst/extdata/calibration_runs"
+f <- function(x){
+
+  mxg_settings <- file.path(settings.dir,"mxg_settings.xml")
+  mxg_settings_list <- xmlToList(xmlParse(mxg_settings))
+  
+  rundir <- file.path("/home/dlebauer/pecan_remote/mxg_calibration", names(sites[x]))
+  tmp <- mxg_settings_list
+  tmp$outdir <- file.path(rundir)
+  tmp$run$host$rundir <- file.path(rundir, "run")
+  tmp$run$host$outdir <- file.path(rundir, "out")
+  tmp$run$site <- sites[[x]]
+  tmp$run$start.date <- runs[[x]]$start
+  tmp$run$end.date <- runs[[x]]$end
+  return(tmp)
+}
+settings <- lapply(sitenames$sitename, f)
+names(settings) <- sitenames$sitename
+
+settings.xml.list <- lapply(1:length(sites), 
+                            function(x){
+                              listToXml(settings[[x]], tag = 'pecan')
+                            } )
+
+names(settings.xml.list) <- sitenames$sitename
+settings.files <- lapply(sitenames$sitename,
+       function(x){
+         saveXML(settings.xml.list[[x]], 
+                 file = file.path(settings.dir, paste0(x, '.xml')))
+                 })
+names(settings.files) <- sitenames$sitename
+save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
+```
+
+```{r pecan-calibration-workflow}
+load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
+library(PEcAn.all)
+for(settings.file in settings.files[[1]]){
+  settings <- read.settings(settings.file)
+  settings$pfts <- get.trait.data(pfts = settings$pfts, 
+                                  modeltype = "BIOCRO", 
+                                  dbfiles = settings$run$dbfiles ,
+                                  database = settings$database$bety, 
+                                  forceupdate = "AUTO") 
+  run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
+                    iterations = settings$meta.analysis$iter, 
+                    dbfiles = settings$run$dbfiles, 
+                    database = settings$database$bety)
+  
+  run.write.configs(settings, settings$database$bety$write)
+  
+  settings$run$host$qsub <- "qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@"
+  start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
+}
+  
+```
+
+
+```{r}
 
 mxg <- mgmts %>% filter(treatment_id %in% mxg_trt$treatment_id)
 filter(mxg, mgmttype == "planting")
 
 
+library(ggplot2)
+library(maps)
+illinois <- borders("county", "illinois", colour = "white")
+
+theme_set(theme_minimal())
+ggplot(data=stats) + geom_tile(aes(lon,lat, fill = mean)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+ggplot(data=range) + geom_tile(aes(lon,lat, fill = range)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
+
+mean_timeseries <- all[,list(median = median(yield)), by = 'lat,lon,year']
+ggplot(data = mean_timeseries)+ geom_tile(aes(lon,lat, fill = median)) +   scale_fill_gradientn(colours = rainbow(4)) + illinois + facet_wrap(~year)
 ```
+
+
