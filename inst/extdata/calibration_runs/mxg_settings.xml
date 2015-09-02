@@ -63,9 +63,8 @@
     </inputs>
     <start.date>1990-01-01 00:00:00</start.date>
     <end.date>2009-12-31 23:59:59</end.date>
-    <host> 
+    <host>
       <name>roger-login.ncsa.illinois.edu</name>
-      <!--<name>biocluster.igb.illinois.edu</name>-->
       <qsub>qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
       <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>

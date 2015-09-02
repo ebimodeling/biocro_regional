@@ -61,11 +61,10 @@
     <comment></comment>
    </soil>
   </inputs>
-  <start.date>2010-01-01</start.date>
+  <start.date>2002-01-01</start.date>
   <end.date>2010-12-31</end.date>
   <host>
    <name>roger-login.ncsa.illinois.edu</name>
-   <comment></comment>
    <qsub>qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
    <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
    <qstat>qstat -j @JOBID@ 2&gt;1 &gt;/dev/null || echo DONE</qstat>

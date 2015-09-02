@@ -390,11 +390,12 @@ il_mxg <- grass_yields %>%
            genus == "Miscanthus" & 
            lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5
   ) %>% 
-  select(site_id, sitename, lat, lon, year) %>% distinct %>%# arrange(lat,lon,year) %>% 
+  select(site_id, sitename, lat, lon, year, planting_date) %>% 
+  distinct %>%# arrange(lat,lon,year) %>% 
   group_by(sitename, site_id, lat, lon) %>% 
   distinct %>% 
-  mutate(start = ymd(paste(min(year), "01", "01", sep = '-')), 
-            end = ymd(paste(max(year), "12", "31", sep = '-')))  %>% 
+  mutate(start = gsub("-05-21", "-01-01", ymd(planting_date)), 
+            end = gsub("2011", "2010", ymd(paste(max(year), "12", "31", sep = '-')))) %>% 
   as.data.frame
 
 sitenames <- il_mxg %>% 
@@ -446,7 +447,7 @@ save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs
 ```{r pecan-calibration-workflow}
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
-for(settings.file in settings.files[[1]]){
+for(settings.file in settings.files){
   settings <- read.settings(settings.file)
   settings$pfts <- get.trait.data(pfts = settings$pfts, 
                                   modeltype = "BIOCRO", 
@@ -457,20 +458,20 @@ for(settings.file in settings.files[[1]]){
                     iterations = settings$meta.analysis$iter, 
                     dbfiles = settings$run$dbfiles, 
                     database = settings$database$bety)
-  
+  settings$model$binary <- gsub("regional", "point", settings$model$binary)
   run.write.configs(settings, settings$database$bety$write)
   
-  settings$run$host$qsub <- "qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@"
   start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 }
   
 ```
 
 
+## Yield Plots
+
 ```{r}
 
-mxg <- mgmts %>% filter(treatment_id %in% mxg_trt$treatment_id)
-filter(mxg, mgmttype == "planting")
+load("~/dev/biocro_regional/")
 
 
 library(ggplot2)
