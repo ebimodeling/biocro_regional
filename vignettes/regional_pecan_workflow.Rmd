@@ -371,6 +371,8 @@ grass_yields <- yields %>%
   left_join(nitrogen, by = 'treatment_id') %>%
   left_join(planting, by = 'treatment_id') %>%
   left_join(irrigation_all, by = 'treatment_id', copy = TRUE)
+
+
 ```
 
 
@@ -380,6 +382,7 @@ grass_yields <- yields %>%
 require(lubridate)
 require(XML)
 require(stringr)
+require(dplyr)
 listToXml <- PEcAn.utils::listToXml
 
 il_mxg <- grass_yields %>% 
@@ -407,8 +410,11 @@ sites <- split(il_mxg %>% select(id = site_id, lat, lon),
                f = 1:nrow(il_mxg))
 runs  <- split(il_mxg %>% select(start, end), 
                f = 1:nrow(il_mxg))
-names(runs) <- names(sites) <- sitenames$sitename
 
+names(runs) <- names(sites) <- sitenames$sitename
+runs[["University_Illinois"]]$start <- "2002-01-01"
+save(runs, sites, file = "~/dev/biocro_regional/inst/extdata/calibration_runs/mxg_runs_sites.RData")
+load("~/dev/biocro_regional/inst/extdata/calibration_runs/mxg_runs_sites.RData")
 settings <- list()
 settings.dir <- "/home/dlebauer/dev/biocro_regional/inst/extdata/calibration_runs"
 f <- function(x){
@@ -447,7 +453,7 @@ save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs
 ```{r pecan-calibration-workflow}
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
-for(settings.file in settings.files){
+for(settings.file in settings.files[[1]]){
   settings <- read.settings(settings.file)
   settings$pfts <- get.trait.data(pfts = settings$pfts, 
                                   modeltype = "BIOCRO", 
@@ -459,11 +465,21 @@ for(settings.file in settings.files){
                     dbfiles = settings$run$dbfiles, 
                     database = settings$database$bety)
   settings$model$binary <- gsub("regional", "point", settings$model$binary)
+ 
   run.write.configs(settings, settings$database$bety$write)
-  
+  #system(paste("/home/dlebauer/fix.sh", settings$rundir))
+
   start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 }
-  
+
+
+for(settings.file in settings.files[[1]]){
+  settings <- read.settings(settings.file)
+  settings$model$binary <- gsub("regional", "point", settings$model$binary)
+  get.results(settings, sa.ensemble.id = 209)
+}
+
+
 ```
 
 
