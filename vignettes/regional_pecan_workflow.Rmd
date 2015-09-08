@@ -132,170 +132,8 @@ dev.off()
 
 ```
 
-### Climate
 
-```{r climate-summary}
-library(data.table)
-library(ggplot2)
-
-# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
-load("~/biocro_output.RData")
-theme_set(theme_bw())
-
-z <- biocro_result[lat == 40.875 & lon == -87.875 ]
-zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
-
-pdf("il_climate.pdf")
-
-ggplot(data = zz, 
-       aes(doy, gdd, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative GDD")
-
-ggplot(data = zz, 
-       aes(doy, p, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative Precipitation")
-
-
-
-zz <- biocro_result[ , list(
-  p = max(cumsum(precip)), 
-  gdd = max(cumsum((tmax + tmin)/2))), 
-  by = 'year,lat,lon']
-
-zz[,`:=`( 
-  # that frown `:=`( 
-  #    is crazy syntax for 'add new variable'
-  #    this is the data.table package. 
-  #    Its great for this and many other reasons, 
-  #    but dplyr is easier to learn and read
-  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
-
-ggplot(data = zzz, aes(x = year, y = p)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("total annual precip, by latitude")
-
-ggplot(data = zzz, aes(x = year, y = gdd)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("gdd, by latitude")
-
-dev.off()
-
-
-
-```
-
-### Climate
-
-```{r climate-summary}
-library(data.table)
-library(ggplot2)
-
-# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
-load("~/biocro_output.RData")
-theme_set(theme_bw())
-
-z <- biocro_result[lat == 40.875 & lon == -87.875 ]
-zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
-
-pdf("il_climate.pdf")
-
-ggplot(data = zz, 
-       aes(doy, gdd, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative GDD")
-
-ggplot(data = zz, 
-       aes(doy, p, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative Precipitation")
-
-
-
-zz <- biocro_result[ , list(
-  p = max(cumsum(precip)), 
-  gdd = max(cumsum((tmax + tmin)/2))), 
-  by = 'year,lat,lon']
-
-zz[,`:=`( 
-  # that frown `:=`( 
-  #    is crazy syntax for 'add new variable'
-  #    this is the data.table package. 
-  #    Its great for this and many other reasons, 
-  #    but dplyr is easier to learn and read
-  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
-
-ggplot(data = zzz, aes(x = year, y = p)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("total annual precip, by latitude")
-
-ggplot(data = zzz, aes(x = year, y = gdd)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("gdd, by latitude")
-
-dev.off()
-
-
-
-```
-
-### Climate
-
-```{r climate-summary}
-library(data.table)
-library(ggplot2)
-
-# copy on roger.ncsa.illinois.edu:/gpfs_scratch/biocro_output.RData 
-load("/home/dlebauer/biocro_output.RData")
-theme_set(theme_bw())
-
-z <- biocro_result[lat == 40.875 & lon == -87.875 ]
-zz <- z[,list(lowyields = ifelse(year %in% c(2005,2007),TRUE,FALSE), doy, p = cumsum(precip), gdd = cumsum((tmax + tmin)/2)), by = 'year']
-
-pdf("il_climate.pdf")
-
-ggplot(data = zz, 
-       aes(doy, gdd, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative GDD")
-
-ggplot(data = zz, 
-       aes(doy, p, group = year, color = lowyields)) + 
-  geom_line() + 
-  ggtitle("Cumulative Precipitation")
-
-
-
-zz <- biocro_result[ , list(
-  p = max(cumsum(precip)), 
-  gdd = max(cumsum((tmax + tmin)/2))), 
-  by = 'year,lat,lon']
-
-zz[,`:=`( 
-  # that frown `:=`( 
-  #    is crazy syntax for 'add new variable'
-  #    this is the data.table package. 
-  #    Its great for this and many other reasons, 
-  #    but dplyr is easier to learn and read
-  lowyield = ifelse(year %in% c(2005,2007),TRUE,FALSE))]
-
-ggplot(data = zzz, aes(x = year, y = p)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("total annual precip, by latitude")
-
-ggplot(data = zzz, aes(x = year, y = gdd)) + 
-  geom_line(aes(color = factor(lat))) + 
-  ggtitle("gdd, by latitude")
-
-dev.off()
-
-
-
-```
-
-
-### Calibration Runs
+## Calibration Runs
 
 ```{r il-mxg-calibration-sites}
 library(dplyr)
@@ -372,11 +210,9 @@ grass_yields <- yields %>%
   left_join(planting, by = 'treatment_id') %>%
   left_join(irrigation_all, by = 'treatment_id', copy = TRUE)
 
-
 ```
 
 
-## BioCro Calibration
 
 ```{r biocro-calibration-sites}
 require(lubridate)
@@ -387,12 +223,11 @@ listToXml <- PEcAn.utils::listToXml
 
 il_mxg <- grass_yields %>% 
   collect %>% 
-  select(-year) %>% #publication year
+  #select(-year) %>% #publication year
   mutate(year = year(ymd(date))) %>% 
   filter(author == "Arundale" & 
            genus == "Miscanthus" & 
-           lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5
-  ) %>% 
+           lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5) %>% 
   select(site_id, sitename, lat, lon, year, planting_date) %>% 
   distinct %>%# arrange(lat,lon,year) %>% 
   group_by(sitename, site_id, lat, lon) %>% 
@@ -450,33 +285,39 @@ names(settings.files) <- sitenames$sitename
 save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 ```
 
+### BioCro Calibration
+
 ```{r pecan-calibration-workflow}
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
-for(settings.file in settings.files[[1]]){
+for(settings.file in settings.files[[2]]){
   settings <- read.settings(settings.file)
+  #settings$sensitivity.analysis <- NULL
+  #settings$ensemble$size <- 1
   settings$pfts <- get.trait.data(pfts = settings$pfts, 
                                   modeltype = "BIOCRO", 
                                   dbfiles = settings$run$dbfiles ,
                                   database = settings$database$bety, 
                                   forceupdate = "AUTO") 
-  run.meta.analysis(pfts = settings$pfts, random = TRUE, threshold = 1.2,
+  run.meta.analysis(pfts = settings$pfts, random = settings$meta.analysis$random.effects, threshold = 1.2,
                     iterations = settings$meta.analysis$iter, 
                     dbfiles = settings$run$dbfiles, 
                     database = settings$database$bety)
   settings$model$binary <- gsub("regional", "point", settings$model$binary)
- 
+  settings$run$host$qsub <- "qsub -l walltime=05:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@"
+  
   run.write.configs(settings, settings$database$bety$write)
-  #system(paste("/home/dlebauer/fix.sh", settings$rundir))
 
+  #system(paste("/home/dlebauer/dev/bety_manuscript/fix.sh", settings$rundir))
   start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
+
 }
 
 
 for(settings.file in settings.files[[1]]){
-  settings <- read.settings(settings.file)
-  settings$model$binary <- gsub("regional", "point", settings$model$binary)
-  get.results(settings, sa.ensemble.id = 209)
+#  settings <- read.settings(settings.file)
+#  settings$model$binary <- gsub("regional", "point", settings$model$binary)
+  get.results(settings, sa.ensemble.id = 212, ens.ensemble.id = 212)
 }
 
 

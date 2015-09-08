@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <pecan>
- <outdir>/home/dlebauer/pecan_remote/mxg_calibration/Dixon_Springs</outdir>
  <pfts>
   <pft>
    <name>Miscanthus_x_giganteus</name>
@@ -65,7 +64,8 @@
   <end.date>2010-12-31</end.date>
   <host>
    <name>roger-login.ncsa.illinois.edu</name>
-   <qsub>qsub -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+   <comment></comment>
+   <qsub>qsub -l walltime=03:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
    <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
    <qstat>qstat -j @JOBID@ 2&gt;1 &gt;/dev/null || echo DONE</qstat>
    <modellauncher>
@@ -76,4 +76,5 @@
    <outdir>/home/dlebauer/pecan_remote/mxg_calibration/Dixon_Springs/out</outdir>
   </host>
  </run>
+ <outdir>/home/dlebauer/pecan_remote/mxg_calibration/Dixon_Springs</outdir>
 </pecan>

@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <pecan>
-  <outdir>/home/dlebauer/.pecan/biocrotest/</outdir>
   <pfts>
     <pft>
       <name>Miscanthus_x_giganteus</name>
@@ -66,7 +65,7 @@
     <host>
       <name>roger-login.ncsa.illinois.edu</name>
       <!--<name>biocluster.igb.illinois.edu</name>-->
-      <qsub>qsub -l walltime=01:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+      <qsub>qsub -l walltime=03:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
       <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
       <modellauncher>
@@ -74,5 +73,5 @@
         <qsub.extra>-l ncpus=10</qsub.extra>
       </modellauncher>
     </host>
-  </run>
+   </run>
 </pecan>
