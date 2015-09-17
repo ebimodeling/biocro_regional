@@ -9,36 +9,37 @@
     <bety>
       <user>bety</user>
       <password>bety</password>
-      <dbname>bety</dbname>
-      <host>localhost</host>
+      <dbname>ebi_production</dbname>
+      <host>ebi-forecast.igb.illinois.edu</host>
       <driver>PostgreSQL</driver>
     </bety>
   </database>
   <meta.analysis>
     <iter>10000</iter>
-    <random.effects>FALSE</random.effects>
+    <random.effects>TRUE</random.effects>
     <update>TRUE</update>
   </meta.analysis>
   <ensemble>
-    <size>1</size>
+    <size>500</size>
     <variable>Yield</variable>
     <variable>TVeg</variable>
     <variable>RootBiom</variable>
     <variable>StemBiom</variable>
  </ensemble>
- <!--
- comment out for a sample run
  <sensitivity.analysis>
     <quantiles>
+      <sigma>-3</sigma>
+      <sigma>-2</sigma>
       <sigma>-1</sigma>
       <sigma>1</sigma>
+      <sigma>2</sigma>
+      <sigma>3</sigma>
     </quantiles>
     <variable>Yield</variable>
     <variable>TVeg</variable>
     <variable>RootBiom</variable>
     <variable>StemBiom</variable>
   </sensitivity.analysis>
-  -->
   <model>
     <type>BIOCRO</type>
     <id>12</id>
@@ -53,26 +54,24 @@
     </site>
     <inputs>
       <met>
-        <id>300</id><!--illinois.nc-->
-        <!--<id>299</id>champaign.nc-->
+        <id>300</id>
       </met>
       <soil>
         <id>303</id><!--hwsd.nc-->
       </soil>
     </inputs>
-    <start.date>2001-01-01 00:00:00</start.date>
-    <end.date>2001-12-31 23:59:59</end.date>
-    <host> 
-      <name>roger-login.ncsa.illinois.edu</name>
-      <!--<name>biocluster.igb.illinois.edu</name>-->
-      <qsub>qsub -A biocro -l walltime=03:00:00,nodes=1:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
-      
+    <start.date>1990-01-01 00:00:00</start.date>
+    <end.date>2009-12-31 23:59:59</end.date>
+    <host>
+      <!--<name>roger-login.ncsa.illinois.edu</name>-->
+      <name>biocluster.igb.illinois.edu</name>
+      <qsub>qsub -l walltime=01:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
       <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
+      <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
       <modellauncher>
-        <binary>/home/dlebauer/dev/pecan/utils/modellauncher/modellauncher</binary>
+        <binary>/home/a-m/dlebauer/dev/pecan/utils/modellauncher/modellauncher</binary>
         <qsub.extra>-l ncpus=10</qsub.extra>
       </modellauncher>
-      <qstat>qstat -j @JOBID@ 2>1 >/dev/null || echo DONE</qstat>
     </host>
-  </run>
+   </run>
 </pecan>
