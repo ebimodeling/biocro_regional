@@ -1,0 +1,17 @@
+---
+title: "Downloading NARR"
+author: "David LeBauer"
+date: "8/14/2015"
+output: html_document
+---
+
+
+```{r}
+start <- "1990-01-01"
+end <- "2014-12-31"
+narrin <- "/home/groups/ebimodeling/met/narr/threehourly_32km/in/"
+narrout <- "/home/groups/ebimodeling/met/narr/threehourly_32km/in/out/"
+download.NARR(outfolder = narrdir, start_date = start, end_date = end, verbose = TRUE)
+met2CF.NARR(in.path = narrin, in.prefix = "narr", outfolder = narrout, start_date = start, end_date = end, verbose = TRUE)
+
+```
