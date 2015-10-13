@@ -1,0 +1,199 @@
+---
+title: "Reparameterization of Yield Decline in Miscanthus"
+author: "David LeBauer"
+date: "9/22/2015"
+output: 
+  html_document:
+      self_contained: no
+
+---
+
+
+# Reconsiling Exponential model in Lesur et al 2013 with data
+
+Lesur et al synthesize long term yield trends for the yields of _Miscanthus_ in Europe.  We would like to use this finding in a crop yield simulation model to account for the effects of age on the potential biomass yield of _Miscanthus x giganteus_. However, the publication presents two forms of the non-linear model and a set of parameters that are inconsistent with figure 2.
+
+In order to identify an appropriate parameterization, we will first review the reported results and then attempt to find a model parameterization that is consistent with the results presented in figure 2.
+
+### Two versions of the Exponential model
+
+In the paper, the best fit model is identified as `4g`. However, two versions of this model are given, in which the first uses a symbol for addition ($+$) and the second a symbol for a multiplication ($*$). 
+
+First, as equation 4 (`4g.a` below):
+
+$$Y = \phi_1 * T ^{\phi_2} + exp(\phi_3 * T)$$ (eq 4)
+
+Then as a statistical model: (`4g.b`):
+
+$$
+y_{ij}=\phi_{1i} * t_{ij}^{\phi_{2i}} * exp{\phi_{3i}*t_{ij}}) + \epsilon_{ij} $$
+
+... the difference is that the first uses addition where the second uses multiplication.  
+
+### Parameter estimates given in Table 2
+
+> Table 2. Parameter estimates of the selected model (model 4g) - $E$ stands for the parameter $\phi_i$ expectation and $V(\phi_i)$ for parameter $\phi_i$ variance
+
+
+| Parameter |	Estimated value |
+|--|--|
+|$E(\phi_1)$	|4.37|
+|$E(\phi_2)$	|1.21|
+|$E(\phi_3)$	|1.69|
+|$V(\phi_1)$	|2.85|
+|$V(\phi_2)$|0|
+|$V(\phi_3)$	|1.46|
+|$\sigma^2$ |	9.61|
+
+
+### Computing Yield 
+
+Given the two variants of the model defined above as `4g.a` and `4g.b` and the parameters in table 2, we can define and compare these functions with the reported parameters:
+
+```{r}
+
+# based on eq 4
+f4g.a <- function(p1, p2, p3, t)  (p1 + t^p2) + exp(p3 * t)
+
+# based on statistical model
+f4g.b <- function(p1, p2, p3, t)  (p1 + t^p2) * exp(p3 * t)
+
+p1 <- 4.37
+p2 <- 1.21
+p3 <- 1.69
+t <- 1:15
+
+par(mfcol = c(1,2))
+
+f4g.a_pred <- data.frame(model = "(p1 + t^p2) + exp(p3 * t)",
+                         year = t,
+                         yield = f4g.a(p1, p2, p3, t))
+f4g.b_pred <- data.frame(model = "(p1 + t^p2) * exp(p3 * t)",
+                         year = t,
+                         yield = f4g.b(p1, p2, p3, t))
+
+plot.data <- rbind(f4g.a_pred, f4g.b_pred)
+library(ggplot2)
+ggplot(data = plot.data) + 
+  geom_line(aes(year, yield, color = model)) + 
+  theme_bw()
+```
+
+We see from the figures above that this is either not the correct model or not the correct parameters.
+
+We can also see that the derived parameters ($Y_{max}$, $T_{max}$, $\Delta_Y$) are both non-sensical and inconsistent with the values given in the text.
+
+| Parameter |	Estimated value | sd |
+|--|--|--|
+|$Y_{max}$	|16.8 t DM ha$^{-1}$ y$^{-1}$| 6.86 |
+|$T_{max}$	|8.33 years| 1.95 |
+| $\Delta_Y$	|1.69 -0.647 t DM ha$^{-1}$ y$^{-1}$| 0.243 | 
+
+
+```{r}
+
+# eqn 7
+Y_max <- function(p1, p2, p3) p1 * (-p2 / p3)^p2 * exp(-p2)
+
+Y_max(p1, p2, p3)
+# eqn 8
+T_max <- function(p2, p3) -p2 / p3
+T_max(p2, p3)
+
+# eqn 9
+Delta_Y <- function(p2, p3, tmax) ((22 * tmax)^p2 * exp(22)) / (22 + (p2/p3))
+Delta_Y(p2, p3, T_max(p2, p3))
+
+#Delta_Y <- function(p2, p3) (p1 * (22 ^ p2 * exp(22*p3)) - (-p2/p3)^p2 * exp(-p2)) / (22 + (p2/p3))
+#Delta_Y(p1, p2, p3)
+
+
+```
+
+## Extracting the lines from Figure 2
+
+<div id="bg">
+  <img src="https://dl.dropboxusercontent.com/u/18092793/lesur/fig2.PNG" alt="" width="400" height = "400">
+</div>  
+
+```{r fig2, fig.height=2.5, fig.width=4}
+library(data.table)
+fig2data <- data.table(year = 0:22, pred = c(0, 3.9, 7.4, 10.5, 12.7, 14.3, 15.2, 15.8, 16, 15.8, 15.5, 14.9, 14.2, 13.5, 12.8, 12, 11.1, 10.2, 9.5, 8.8, 8, 7.1, 6.5), pred_lcl = c(0, 3.1, 5.5, 7.2, 8.4, 9, 9.2, 9.2, 9, 8.7, 8.3, 7.7, 7.2, 6.6, 6.1, 5.6, 5, 4.5, 4, 3.7, 3.3, 2.8, 2.5), pred_ucl = c(0, 4.6, 9.4, 14.5, 18.4, 22, 24.6, 26.2, 27.5, 27.9, 28.2, 28, 27.5, 26.7, 25.8, 24.8, 23.6, 22.4, 21.1, 20, 18.8, 17.4, 16.3))
+
+fig2 <- ggplot(data = fig2data, aes(year, pred)) + 
+  geom_ribbon(aes(ymax = pred_ucl, ymin = pred_lcl), fill = 'white', color = 'grey') +
+  geom_line() + 
+  theme_bw() + 
+  ylab("Yield (t DM ha-1)") + xlab ("Growing season (year)")
+
+
+print(fig2)
+```
+
+## Ricker Curve
+
+from p 94 of Bolker _Ecological Data and Models with R_, eq 4 is equivalent to the Ricker function with $\phi_2=1$
+
+* eq 4: $Y = \phi_1 * T ^{\phi_2} * exp(\phi_3 * T)$
+* Ricker Model (from Bolker): $y = axe^{−bx}$
+
+```{r ricker}
+ricker <- function(t, phi1 = 1, phi2 = 1, phi3 = 1) {
+   y <- phi1 * (t^phi2) * exp(-phi3 * t)
+   return(y)
+}
+
+y <- ricker(t = 0:22, p1, p2, p3)
+```
+
+
+Following Bolker, we can estimate parameter values from the shape of the curve. 
+
+Specifically:
+
+* $\phi_1$ describes the initial slope, which can be computed in R by fitting a spline to the data and taking the derivative at $t=0$.
+
+```{r newp1}
+f <- splinefun(x = fig2data$year, y = fig2data$pred)
+newp1 <- f(x = 0, deriv = 1)
+```
+
+* $\phi_2$ is set to 1; this is equivalent to model 4g in which the parameter is not estimated.
+
+```{r newp2}
+newp2 <- 1 
+```
+
+* $\textrm{max} = 1 / \phi_3$, so $\phi_3 = 1/\textrm{max}$
+
+```{r newp3}
+x <- seq(0,10, by = 0.01)
+y <- f(x)
+newp3 <- 1 / x[which.max(y)]
+
+```
+
+### Estimating the 'true' eq 4 parameters
+
+Here we fit eq 4 with the old (blue) and new (orange) parameters, and then a few other modifications (red, orange) to find a parameterization of this model that is consistent with the data.
+
+
+```{r ricker2}
+fig2 + geom_line(aes(0:22, ricker(0:22, p1 * 1.22, 1, 1/8)), color = 'red') +
+  geom_line(aes(0:22, ricker(0:22, newp1, 1.12, newp3)), color = 'green') +
+  geom_line(aes(0:22, ricker(0:22, newp1, newp2, newp3)), color = 'orange') +
+  geom_line(aes(0:22, ricker(0:22, p1, p2, p3)), color = 'blue')
+  
+```
+
+* The blue line (reported parameters) does not fit 
+* the orange line is a basic Ricker function parameterized  
+* red and green lines are decent fit
+
+### New Parameters
+
+| Parameter |	Old | New |
+|--|--|--|
+|$\phi_1$	|4.37|`r round(newp1, 2)`|
+|$\phi_2$	|1.21|1.12|
+|$\phi_3$	|1.69|`r signif(newp3, 2)`|
