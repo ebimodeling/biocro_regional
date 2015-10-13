@@ -1,0 +1,110 @@
+---
+title: "IL Miscanthus Calibration"
+author: "David LeBauer"
+date: "August 26, 2015"
+output: pdf_document
+---
+
+
+
+
+```r
+install("~/dev/pecan.calibrator")
+```
+
+```{r message = FALSE}
+
+require(data.table)
+require(knitr)
+require(ggplot2)
+require(dplyr)
+
+require(PEcAn.calibrator)
+
+theme_set(theme_minimal())
+```
+
+
+```{r}
+load("~/dev/biocro_regional/data/obs_mxg.RData")
+load("~/dev/biocro_regional/data/all.ens.RData")
+
+load("~/pecan_remote/mxg_calibration/University_Illinois/samples.Rdata")
+load("~/pecan_remote/mxg_calibration/University_Illinois/pft/Miscanthus_x_giganteus/prior.distns.Rdata")
+
+load("~/pecan_remote/mxg_calibration/University_Illinois/ensemble.output.262.Yield.2002.2010.Rdata")
+quantiles <- rownames(sa.samples$Miscanthus_x_giganteus)
+
+
+```
+
+
+### Identify best run, compare to data 
+
+```{r}
+
+library(tidyr)
+theta <- data.table(ensemble.samples$Miscanthus_x_giganteus, rep = 0, weight = 0)
+
+### standardize long and short sitenames
+sites <- data.table(
+  obs_mxg %>% select(sitename) %>% distinct %>% 
+    arrange(order(sitename)),
+  all.ens %>% select(site) %>% distinct %>%
+    arrange(order(site)))
+
+### observed data
+obs <- obs_mxg %>% 
+  select(sitename, year, mean) %>% 
+  group_by(sitename, year) %>% 
+  summarize(yield = mean(mean), n = length(mean)) %>% 
+  group_by() %>% 
+  left_join(sites, by = 'sitename') %>% 
+  select(site, year, xobs = yield)
+
+mod <- all.ens %>% select(site, run, year, xpred = Yield)
+
+l <- all %>% setDT
+
+l[,`:=`(run_seq = rank(run), 
+        xpred, xobs, 
+        d = dnorm(xpred - xobs, 0, 5), 
+        error = (xpred-xobs)/xobs), 
+  by = 'site,year']
+
+ggplot(l) + geom_point(aes(d, error, color = site))
+
+ggplot(l) + geom_histogram(aes(d))
+ggplot(l) + geom_point(aes(xpred, xobs, color = d))
+
+L <- l[, list(obs = sum(xobs)/length(xobs), pred = mean(xpred), L = sum(d)), by = 'run_seq']
+
+
+ggplot(L) + geom_point(aes(obs, pred, color = L)) + geom_line(aes(c(0,30), c(0,30)))
+
+l[run_seq == L[which.max(L)]$run_seq]
+weights <- all %>%
+  mutate(d = dnorm(xpred - xobs, 0, 5)) %>% 
+  mutate(w = d/sum(d)) %>%
+  group_by(run) %>%
+  summarize(w = sum(w)) %>%
+  mutate(cdf = cumsum(w),
+         s = seq(rand, 1-rand, by = 1/len),
+         p = ifelse(s <= cdf, s, NA))
+
+
+theta2 <- particle.filter(codeOutput = mod, predictions = obs, mean = 0.5, stdev = 0.1, n = 1, theta = theta)
+
+```
+
+###
+
+```{r plots}
+theme_set(theme_bw())
+ggplot() + xlim(2007,2010) +
+  geom_density2d(data = all, aes(xpred, xobs), alpha = 0.01, size = 2) +   facet_wrap(~site, ncol = 2)
+  #geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'red') + 
+  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename) & nrate >= 100], aes(jitter(year), mean), color = 'red') +
+
+
+```

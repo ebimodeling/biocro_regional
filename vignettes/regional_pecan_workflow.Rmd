@@ -159,7 +159,8 @@ citations <- tbl(bety, 'citations') %>%
   select(citation_id = id, author, year, title)
 
 yields <- tbl(bety, 'yields') %>%
-  select(id, date, mean, statname, stat, site_id, specie_id, treatment_id, citation_id) %>% 
+  select(id, date, mean, statname, stat, site_id, specie_id, 
+         treatment_id, citation_id) %>% 
   left_join(species, by = 'specie_id') %>%
   left_join(sites, by = 'site_id') %>% 
   left_join(citations, by = 'citation_id')
@@ -202,7 +203,8 @@ irrigation_boolean <- irrigation %>%
   mutate(irrig = as.logical(mean(level))) %>% 
   select(treatment_id, irrig = irrig)
 
-irrigation_all <- irrigation_boolean %>% full_join(irrigation_rate, copy = TRUE)
+irrigation_all <- irrigation_boolean %>%
+  full_join(irrigation_rate, copy = TRUE)
 
 grass_yields <- yields  %>% 
   filter(genus %in% c('Miscanthus', 'Panicum')) %>%
@@ -232,7 +234,7 @@ il_mxg <- grass_yields %>%
            year(planting_date) %in% c(2004, 2002) & 
            lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5) %>% 
   select(site_id, sitename, lat, lon, planting_date, date, mean, se = stat, nrate, irrig, irrig.mm.y)
-
+save(il_mxg, file = "~/dev/biocro_regional/data/il_mxg.RData")
 il_mxg_sites <- il_mxg %>% 
   select(site_id, sitename, lat, lon, planting_date, date) %>%  
   group_by(sitename, lat, lon, planting_date) %>% 
@@ -296,8 +298,19 @@ save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs
 ```{r pecan-calibration-workflow}
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
+
+d <- settings$database$bety
+bety <- src_postgres(host = d$host, user = d$user, password = d$password, dbname = d$dbname)
+ensembles <- tbl(bety, 'ensembles')
+
 for(settings.file in settings.files){
   settings <- read.settings(settings.file)
+}
+
+for(dir in short_sitenames){
+  settings.file <-file.path("/home/dlebauer/pecan_remote/mxg_calibration", dir, "pecan.xml")
+  settings <- read.settings(settings.file)
+
 #  settings$pfts <- get.trait.data(pfts = settings$pfts, 
 #                                  modeltype = "BIOCRO", 
 #                                  dbfiles = settings$run$dbfiles ,
@@ -315,26 +328,30 @@ for(settings.file in settings.files){
   #system(paste("/home/dlebauer/dev/bety_manuscript/fix.sh", settings$rundir))
 #  start.model.runs(settings, settings$database$bety$write) # Start ecosystem model runs
 
-  get.results(settings)
-  #run.sensitivity.analysis()
-  #run.ensemble.analysis()
+  sensitivity_id <- ensembles %>% 
+    filter(workflow_id == settings$workflow$id) %>% 
+    filter(runtype == 'sensitivity analysis') %>% 
+    dplyr::select(id) %>% collect %>% as.numeric
+  ensemble_id <- ensembles %>% 
+    filter(workflow_id == settings$workflow$id) %>% 
+    filter(runtype == 'ensemble') %>% 
+    dplyr::select(id) %>% collect %>% as.numeric
+  get.results(settings, sa.ensemble.id = sensitivity_id, ens.ensemble.id = ensemble_id)
+  run.sensitivity.analysis(ensemble.id = sensitivity_id)
+  run.ensemble.analysis(ensemble.id = ensemble_id)
   
-}
-
-
-for(settings.file in settings.files){
-#  settings <- read.settings(settings.file)
-#  settings$model$binary <- gsub("regional", "point", settings$model$binary)
-  get.results(settings, sa.ensemble.id = 212, ens.ensemble.id = 212)
 }
 
 
 ```
 
+
+
 ```{r illinois-model-preds}
 library(data.table)
 library(dplyr)
-
+save(short_sitenames, file = 'data/short_sitenames.RData')
+load('data/short_sitenames.RData')
 all.ens.out <- list()
 for(sitename in short_sitenames){
   outdir <- file.path("~/pecan_remote/mxg_calibration/", sitename)
@@ -347,31 +364,53 @@ for(sitename in short_sitenames){
   
   all.ens.out[[sitename]] <- rbindlist(ens.out)
 }
+```
 
+
+Correcting yield output using Ricker function from Lesur et al 2013 (see file `biocro_regional/lesur/lesur_mxg_correction.Rmd`)
+
+| Parameter |	Old | New |
+|--|--|--|
+|$\phi_1$	|4.37| 4.12 |
+|$\phi_2$	|1.21|1.12|
+|$\phi_3$	|1.69| 0.13|
+
+```{r lesur-correction}
 ## should be moved to run_biocro function
+ricker <- function(t, phi1 = 1, phi2 = 1, phi3 = 1) {
+  y <- phi1 * (t^phi2) * exp(-phi3 * t)
+  return(y)
+}
 
 correct.yield <- function(biocro_result){
   start <- min(biocro_result$year)
-  if(diff(range(biocro_result$year)) > 15){
-    stop('only have correction values for 15 yr')
-  } 
+
   # correction
-  # lessur = c(0.3, 0.5, 0.8, 1, 1.2, 1.1, 1, 0.95, 0.9, 0.85, 0.8, 0.77, 0.74, 0.7, 0.65)
-  # arundale = c(NA, NA, 0.62, 0.90, 1, 0.97, 0.86, 0.72, 0.67, 0.67, 0.66)
-  correction <- c(0.3, 0.5, 0.62, 0.90, 1, 0.97, 0.86, 0.72, 0.67, 0.67, 0.66)
-  yield_correction <- data.table(year = start + 0:(length(correction) - 1), adjust = correction)
+  corrected_lessur <- ricker(0:20, 4.12, 1.12, 0.13)
+  age_correction <- corrected_lessur/max(corrected_lessur)
+
+  # first two values for arundale taken from lessur paper
+  harvest_correction <- 0.67 
+  correction <- age_correction * harvest_correction
+  # from Miguez et al 2013
+  # http://onlinelibrary.wiley.com/doi/10.1111/j.1757-1707.2011.01150.x/epdf; 
+  # multiplied by 0.67 to take account of losses in senescence, postsenescence, 
+  # and during harvest (Clifton-Brown et al., 2004; Heaton et al., 2008).
+  correction <- data.table(year = start + 0:(length(correction) - 1), adjust = correction)
   
-  a <- merge(biocro_result, yield_correction, by = 'year') 
+  a <- merge(biocro_result, correction, by = 'year') 
   a[, `:=`(corrected_yield = Yield * adjust)]
   return(a)
 }
-
+load("data/all.ens.out.RData")
 all.ens <- rbindlist(lapply(all.ens.out, correct.yield))
-
+save(all.ens, file = "data/all.ens.RData")
 load("~/dev/biocro_regional/data/grass_yields.RData")
+library(lubridate)
+library(dplyr)
 obs_mxg <- grass_yields %>% 
   collect %>% 
-  select(-year) %>% #publication year
+#  select(-year) %>% #publication year
   mutate(year = year(ymd(date))) %>% 
   filter(genus == "Miscanthus" & author == "Arundale" & !(year(planting_date) == 2009)) %>%
   setDT 
@@ -387,14 +426,35 @@ obs_mxg$sitename <- obs_mxg$dirname
 obs_mxg[, `:=`(nrate = ifelse(is.na(nrate), 0, nrate))]
 theme_set(theme_bw())
 setnames(all.ens, "site", "sitename")
+
+save(obs_mxg, file = "~/dev/biocro_regional/data/obs_mxg.RData")
 ggplot() + 
-  geom_line(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.2) + 
+  geom_line(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.01, size = 2) + 
+  geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'blue') + 
+  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename)], aes(jitter(year), mean), color = 'red') +
+  facet_wrap(~sitename, ncol = 2)
+
+ggplot(all.ens) + geom_point(aes(mean_temp, Yield, color= mean_precip), alpha = 0.2) + scale_color_gradientn(colours =  c('grey', 'blue'))
+
+ggplot(all.ens) + geom_point(aes(mean_precip, Yield, color = mean_temp), alpha = 0.2) + scale_color_gradientn(colours =  c('yellow', 'red'))
+all.ens[sitename, Yield, ]
+
+ggplot() + xlim(2007,2010) +
+  geom_density2d(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.01, size = 2) + 
   #geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'red') + 
-  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename)], aes(year, mean, size = nrate), color = 'red') +
-  facet_wrap(~sitename)
+  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename) & nrate >= 100], aes(jitter(year), mean), color = 'red') +
+  facet_wrap(~sitename, ncol = 2)
+
+```
+
+### Particle Filter
+
+```{r}
 
 
 ```
+
+
 
 ## Yield Plots
 
