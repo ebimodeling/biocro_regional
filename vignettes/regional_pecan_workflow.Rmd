@@ -21,6 +21,7 @@ Open and read in settings file for PEcAn run.
 settings.file <- c("/home/dlebauer/dev/biocro_regional/vignettes/illinois_mxg_settings.xml")
 
 settings <- read.settings(settings.file)
+settings$database$bety$dbname <- "ebi_production"
 settings$pfts <- get.trait.data(pfts = settings$pfts, 
                                 modeltype = "BIOCRO", 
                                 dbfiles = settings$run$dbfiles ,
@@ -143,9 +144,15 @@ library(ggplot2)
 library(maps)
 illinois <- borders("county", "illinois", colour = "white")
 
+
 theme_set(theme_minimal())
 ggplot(data=stats) + geom_tile(aes(lon,lat, fill = mean)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
 
+load("annual.result.RData")
+y <- annual.result[, list(year = rank(yearindex)), by = 'lat,lon']
+
+mean = mean(Stem + Leaf)* 0.67, se = sd(Stem + Leaf)* 0.67), by = 'lat,lon,']
+annual.result[, `:=`(mean = mean(Stem + Leaf)* 0.67, se = sd(Stem + Leaf)* 0.67), by = 'lat,lon,']
 ggplot(data=range) + geom_tile(aes(lon,lat, fill = range)) +   scale_fill_gradientn(colours = rainbow(7)) + illinois
 
 mean_timeseries <- all[,list(median = median(yield)), by = 'lat,lon,year']

@@ -125,6 +125,8 @@ sitenames <- il_mxg_sites %>%
 
 short_sitenames <- sitenames$short_sitename
 
+save(short_sitenames, file = 'data/short_sitenames.RData')
+
 sites <- split(il_mxg_sites %>% select(id = site_id, lat, lon), 
                f = 1:nrow(il_mxg_sites))
 runs  <- split(il_mxg_sites %>% select(start, end), 
@@ -174,7 +176,7 @@ save(settings.files, file = '~/dev/biocro_regional/inst/extdata/calibration_runs
 load('~/dev/biocro_regional/inst/extdata/calibration_runs/settings.files.RData')
 library(PEcAn.all)
 
-d <- settings$database$bety
+d <- settings$University_Illinois$database$bety
 bety <- src_postgres(host = d$host, user = d$user, password = d$password, dbname = d$dbname)
 ensembles <- tbl(bety, 'ensembles')
 
@@ -225,7 +227,6 @@ for(dir in short_sitenames){
 ```{r illinois-model-preds}
 library(data.table)
 library(dplyr)
-save(short_sitenames, file = 'data/short_sitenames.RData')
 load('data/short_sitenames.RData')
 all.ens.out <- list()
 for(sitename in short_sitenames){
@@ -237,8 +238,11 @@ for(sitename in short_sitenames){
     ens.out[[as.character(id)]] <- biocro_result[,list(site = sitename, run = id, Yield = max(Stem + Leaf), mean_temp = mean(tavg), mean_precip = mean(precip)), by = 'lat,lon,year']
   }
   
-  all.ens.out[[sitename]] <- rbindlist(ens.out)
+  .all <-  rbindlist(ens.out)[,`:=`(run = frank(run, ties.method = 'dense'))]
+  all.ens.out[[sitename]] <- .all
 }
+
+
 ```
 
 
@@ -252,34 +256,55 @@ Correcting yield output using Ricker function from Lesur et al 2013 (see file `b
 
 ```{r lesur-correction}
 ## should be moved to run_biocro function
+
+
+
 ricker <- function(t, phi1 = 1, phi2 = 1, phi3 = 1) {
   y <- phi1 * (t^phi2) * exp(-phi3 * t)
   return(y)
 }
 
-correct.yield <- function(biocro_result){
-  start <- min(biocro_result$year)
+# Arundale parms from fig 2b
+fig2b_mxg <- data.table(age = 3:10, 
+                        mean = c(21.5, 31.3, 34.6, 33.8, 29.7, 25.09, 23.2))
+
+nls(mean ~ a * (age^b) * exp(-c * age), 
+    data = fig2b_mxg, 
+    start=list(a = 4, b = 1.4, c = 0.24))
+
+correct.yield <- function(biocro_result, age_correction = 1, harvest_correction = 1){
+  years <- sort(unique(biocro_result$year))
 
   # correction
-  corrected_lessur <- ricker(0:20, 4.12, 1.12, 0.13)
-  age_correction <- corrected_lessur/max(corrected_lessur)
+  if(!age_correction == 1){
+    if(age_correction == 'lesur'){
+      k <- ricker(1:length(years), 4.12, 1.12, 0.13)
+      age_correction <- k/max(k)    
+    } else if (age_correction == 'arundale'){
+      k <- ricker(1:length(years), 5.7, 2.5, 0.46)
+      age_correction <- k/max(k)
+    }
+  }
 
-  # first two values for arundale taken from lessur paper
-  harvest_correction <- 0.67 
-  correction <- age_correction * harvest_correction
   # from Miguez et al 2013
   # http://onlinelibrary.wiley.com/doi/10.1111/j.1757-1707.2011.01150.x/epdf; 
   # multiplied by 0.67 to take account of losses in senescence, postsenescence, 
   # and during harvest (Clifton-Brown et al., 2004; Heaton et al., 2008).
-  correction <- data.table(year = start + 0:(length(correction) - 1), adjust = correction)
+  correction <- data.table(year = years, 
+                           adjust = age_correction * harvest_correction)
   
   a <- merge(biocro_result, correction, by = 'year') 
   a[, `:=`(corrected_yield = Yield * adjust)]
   return(a)
 }
-load("data/all.ens.out.RData")
-all.ens <- rbindlist(lapply(all.ens.out, correct.yield))
+.all <- lapply(all.ens.out, function(x) correct.yield(x, age_correction = 'lesur'))
+all.ens <- rbindlist(.all)
+all.ens[,`:=`(sitename = site)]
 save(all.ens, file = "data/all.ens.RData")
+```
+
+
+```{r load-mxg-obs}
 load("~/dev/biocro_regional/data/grass_yields.RData")
 library(lubridate)
 library(dplyr)
@@ -303,26 +328,47 @@ theme_set(theme_bw())
 setnames(all.ens, "site", "sitename")
 
 save(obs_mxg, file = "~/dev/biocro_regional/data/obs_mxg.RData")
-ggplot() + 
-  geom_line(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.01, size = 2) + 
-  geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'blue') + 
-  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename)], aes(jitter(year), mean), color = 'red') +
-  facet_wrap(~sitename, ncol = 2)
+
+```
+
+
+```{r plot-model-obs}
+load("data/all.ens.RData")
+load("data/obs_mxg.RData")
+
+
+o <- obs_mxg %>% 
+  group_by(year, sitename) %>% 
+  summarise(mean = mean(mean), se = sqrt(sum(stat^2))) 
+
+all.ens$sitename <- as.factor(all.ens$sitename)
+levels(all.ens$sitename) <- gsub("_", " ", levels(all.ens$sitename))
+
+o$sitename <- as.factor(o$sitename)
+levels(o$sitename) <- gsub("_", " ", levels(o$sitename))
+
+ggplot() + xlim(c(2006.7, 2010.3)) + 
+  #geom_line(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.01, size = 1) + 
+  geom_line(data = all.ens, aes(year, 0.67 * Yield, group = run), alpha = 0.01) + 
+  geom_pointrange(data = o, aes(year, mean, ymin = mean - se, ymax = mean + se), color = 'red') +
+  geom_line(data = all.ens[run == 339], aes(year, 0.67 * Yield), color = 'blue') + 
+  facet_wrap(~sitename, ncol = 4) +
+  ylab("Yield (Mg/ha)") +
+  xlab("Year")
 
 ggplot(all.ens) + geom_point(aes(mean_temp, Yield, color= mean_precip), alpha = 0.2) + scale_color_gradientn(colours =  c('grey', 'blue'))
 
 ggplot(all.ens) + geom_point(aes(mean_precip, Yield, color = mean_temp), alpha = 0.2) + scale_color_gradientn(colours =  c('yellow', 'red'))
-all.ens[sitename, Yield, ]
 
 ggplot() + xlim(2007,2010) +
-  geom_density2d(data = all.ens, aes(year, corrected_yield, group = run), alpha = 0.01, size = 2) + 
+  geom_line(data = all.ens, aes(year, corrected_yield), size = 2) + 
   #geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'red') + 
   geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename) & nrate >= 100], aes(jitter(year), mean), color = 'red') +
   facet_wrap(~sitename, ncol = 2)
 
 ```
 
-### Particle Filter
+### Calibration
 
 ```{r}
 install("~/dev/pecan.calibrator")
@@ -363,42 +409,69 @@ library(tidyr)
 theta <- data.table(ensemble.samples$Miscanthus_x_giganteus, rep = 0, weight = 0)
 
 ### standardize long and short sitenames
-sites <- data.table(
-  obs_mxg %>% select(sitename) %>% distinct %>% 
-    arrange(order(sitename)),
-  all.ens %>% select(site) %>% distinct %>%
-    arrange(order(site)))
+sites <- cbind(
+  obs_mxg[, list(sitename = unique(sitename)[order(unique(sitename))])],
+  all.ens[ , list(site = unique(site)[order(unique(site))])])
 
 ### observed data
-obs <- obs_mxg %>% 
-  select(sitename, year, mean) %>% 
-  group_by(sitename, year) %>% 
-  summarize(yield = mean(mean), n = length(mean)) %>% 
-  group_by() %>% 
-  left_join(sites, by = 'sitename') %>% 
-  select(site, year, xobs = yield)
+obs <- obs_mxg[, list(site = sitename, yield = mean(mean), n = length(mean), se = mean(stat)), by = 'sitename,year'][,list(site, year, xobs = yield, se)]
+  
 
-mod <- all.ens %>% select(site, run, year, xpred = Yield)
+mod <- all.ens[ , list(xpred = Yield), by = 'site,run,year']
+setkeyv(obs, c('site', 'year'))
+setkeyv(mod, c('site', 'year'))
 
-l <- all %>% setDT
+all <- merge(obs, mod, by = c('site','year'))
 
-l[,`:=`(run_seq = rank(run), 
-        xpred, xobs, 
-        d = dnorm(xpred - xobs, 0, 5), 
-        error = (xpred-xobs)/xobs), 
-  by = 'site,year']
-
-ggplot(l) + geom_point(aes(d, error, color = site))
-
-ggplot(l) + geom_histogram(aes(d))
-ggplot(l) + geom_point(aes(xpred, xobs, color = d))
-
-L <- l[, list(obs = sum(xobs)/length(xobs), pred = mean(xpred), L = sum(d)), by = 'run_seq']
+all_bysite <- all[,list(xobs = mean(xobs), xpred = mean(xpred)), by = 'site,run']
 
 
-ggplot(L) + geom_point(aes(obs, pred, color = L)) + geom_line(aes(c(0,30), c(0,30)))
+## estimate sd
+obs_mxg %>% dplyr::select(stat) %>%
+  summarise(mean(stat, na.rm = TRUE))
 
-l[run_seq == L[which.max(L)]$run_seq]
+all[,`:=`(xpred = 0.66 * xpred)]
+l <- all[,list(xobs = mean(xobs), xpred = mean(xpred), 
+               d = mean(-dnorm(xobs, xpred, se)),
+               #d = sum(-dlnorm(log(xobs), log(xpred), sqrt(log(se^2/xobs)^2 + 1))), 
+               rmse = mean(sqrt((xpred - xobs)^2 / length(xobs)))), 
+  by = 'run,site']#[,`:=`(site = as.factor(site))]
+
+l <- l[,list(xpred = mean(xpred), xobs = mean(xobs), rmse=mean(rmse), d = mean(d)), by = 'run']
+l[,plot(xpred, d)]
+l[,plot(xpred, rmse)]
+
+l[which.min(rmse)]
+l[which.min(d)]
+
+ggplot() + 
+  geom_point(data = all, aes(site, xpred), color = 'grey') + 
+  geom_point(data = all[run == 154], aes(site, xpred), color = 'darkgreen', size = 4) + 
+    geom_point(data = all[run == 339], aes(site, xpred), color = 'red', size = 4) + 
+  geom_point(data = all[run == 309], aes(site, xpred), color = 'orange', size = 4)+
+    geom_point(data = all, aes(site, xobs), size = 4)
+
+
+
+
+all_bysite <- all[,list(xobs = mean(xobs), xpred = mean(xpred)), by = 'site,run']
+
+ggplot() + 
+  geom_point(data = all_bysite, aes(site, xpred), color = 'grey') + 
+  geom_point(data = all_bysite, aes(site, xobs), size = 4) +
+  geom_point(data = all_bysite[run == 154], aes(site, xpred), color = 'darkgreen', size = 4) + 
+    geom_point(data = all_bysite[run == 339],# min rmse
+               aes(site, xpred), color = 'red', size = 4) 
+
+### 339 has best fit RMSE
+
+
+```
+
+### Particle filter
+
+```{r}
+
 weights <- all %>%
   mutate(d = dnorm(xpred - xobs, 0, 5)) %>% 
   mutate(w = d/sum(d)) %>%
@@ -416,11 +489,62 @@ theta2 <- particle.filter(codeOutput = mod, predictions = obs, mean = 0.5, stdev
 ###
 
 ```{r plots}
-theme_set(theme_bw())
-ggplot() + xlim(2007,2010) +
-  geom_density2d(data = all, aes(xpred, xobs), alpha = 0.01, size = 2) +   facet_wrap(~site, ncol = 2)
-  #geom_line(data = all.ens, aes(year, Yield, group = run), alpha = 0.2, color = 'red') + 
-  geom_point(data = obs_mxg[sitename %in% unique(all.ens$sitename) & nrate >= 100], aes(jitter(year), mean), color = 'red') +
 
 
+
+```
+
+
+### https://github.com/ebimodeling/biocro_regional/issues/16
+
+```{r}
+  
+load("~/annual.result.RData")  
+require(data.table)
+require(sp)
+require(raster)
+
+
+# Correct yield
+ricker <- function(t, phi1 = 1, phi2 = 1, phi3 = 1) {
+  y <- phi1 * (t^phi2) * exp(-phi3 * t)
+  return(y)
+}
+
+correct.yield <- function(biocro_result){
+  start <- min(biocro_result$year)
+
+  # lesur correction
+  #corrected_lessur <- ricker(0:20, 4.12, 1.12, 0.13)
+  corrected_arundale <- ricker(0:20, 5.2, 2.6, 0.46)
+  age_correction <- corrected_arundale/max(corrected_arundale)
+
+  # from Miguez et al 2013
+  # http://onlinelibrary.wiley.com/doi/10.1111/j.1757-1707.2011.01150.x/epdf; 
+  # multiplied by 0.67 to take account of losses in senescence, postsenescence, 
+  # and during harvest (Clifton-Brown et al., 2004; Heaton et al., 2008).
+  harvest_correction <- 0.67 
+  correction <- age_correction * harvest_correction
+
+  correction <- data.table(year = start + 0:(length(correction) - 1), adjust = correction)
+
+  a <- merge(biocro_result, correction, by = 'year') 
+  a[, `:=`(corrected_yield = (Stem + Leaf) * adjust)]
+  return(a)
+}
+correct_yield <- correct.yield(annual.result)
+
+# funtion to create a raster
+createRaster <- function(df, brks, cols, name) {
+  r <- raster(ncols=16, nrows=23, xmn=-91.50, xmx=-87.50, ymn=37.00, ymx=42.75)
+  y <- df$lat
+  x <- df$lon
+  xy <- cbind(x,y)
+  r0 <- rasterize(xy, r, df$corrected_yield, fun=mean)
+  plot(r0, breaks=brks, col=cols, main=name)
+  #plot(counties.il, add=T)
+}
+
+  
+  
 ```

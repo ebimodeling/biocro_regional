@@ -197,3 +197,302 @@ fig2 + geom_line(aes(0:22, ricker(0:22, p1 * 1.22, 1, 1/8)), color = 'red') +
 |$\phi_1$	|4.37|`r round(newp1, 2)`|
 |$\phi_2$	|1.21|1.12|
 |$\phi_3$	|1.69|`r signif(newp3, 2)`|
+
+## Fit Arundale data
+
+```{r}
+
+# from fig 2b
+fig2b_mxg <- data.table(age = 3:10, 
+                        mean = c(21.5, 31.3, 34.6, 33.8, 29.7, 25.09, 23.2, 24.5))
+
+nls(mean ~ a * (age^b) * exp(-c * age), data = fig2b_mxg, start=list(a = 4, b = 1.4, c = 0.24))
+
+
+library(dplyr)
+library(lubridate)
+load("~/dev/biocro_regional/data/grass_yields.RData")
+ui_mxg <- grass_yields %>% 
+  select(-year) %>% #publication year
+  filter(grepl("Illinois", sitename) & 
+           genus == "Miscanthus" & 
+           year(planting_date) %in% c(2004, 2002) ) %>% #& 
+           #lat<42.5 & lat > 37 & lon < -87.5 & lon > -91.5
+           #lon < -20) %>% 
+  select(site_id, sitename, lat, lon, planting_date, date, mean, se = stat, nrate, irrig, irrig.mm.y)
+
+m <- ui_mxg %>% 
+  mutate(age = as.numeric(year(date) - year(planting_date)), nrate = ifelse(is.na(nrate), 0, nrate), site = as.factor(sitename)) %>% 
+  select(age, sitename, nrate, mean, site) %>% filter(nrate == 0)
+
+nls(mean ~ a * (age^b) * exp(-c * age), data = m, start=list(a = 4, b = 1.4, c = 0.24))
+
+d <- data.frame(age = 1:10, arundale = c(5, 10, 21.5, 31.2, 34.5, 33.3, 29.5, 25.1, 23, 23.2))
+
+nls(arundale ~ a * (age^b) * exp(-c * age), data = d, start=list(a = 4, b = 2, c = 0.5))
+
+    t <- rep(1:20, 16)
+    g <- rep(1:4, each = 80)
+    a <- rep(c(3.5, 4, 4.1, 5), each = 80)
+    b <- rep(c(1.1, 1.4, 1.8, 2.5), each = 80)
+    c <- rep(c(0.125, 0.25), each = 160)
+    set.seed(1)
+    e_a <- runif(320, -0.5, 0.5)
+    e_b <- runif(320, -0.1, -0.1)
+    e_c <- runif(320, -0.02, 0.02)
+    y <- round(ricker(t = t, a + e_a, b + e_b, c + e_c), 1)
+    f <- function(t, a, b, c) phi1 * (t^phi2) * exp(-phi3 * t)
+    mydata <- data.frame(t = t, y = y, g = g)
+
+    nls(y ~ a * (t^b) * exp(-c * t), start=list(a = 4, b = 1.4, c = 0.24))
+library(nlme)
+fm1 <- nlme(y ~ a * (t^b) * exp(-c * t),
+            data = mydata,
+            fixed = a + b + c~1,
+            random = a + b + c ~ 1|g,
+            start = c(a = 4, b = 1, c = 0.25),
+            method = "REML")
+
+
+fm1 <- nlme(mean ~ phi1 * (age^phi2) * exp(-phi3 * age),
+            data = m,
+            fixed = list(phi1~1, phi2~1,phi3 ~ 1),
+            random = age ~ 1|site,
+            start = c(phi1 = 2, phi2 = 2, phi3 = 2))
+
+m2 <- nlme(C ~ alpha * A ^ (alpha), 
+           data = df, 
+           random = alpha ~ 1 | SITE, 
+           fixed = list(A ~ 1, B ~ 1), 
+           start = c(1, 0.01))
+
+fm1 <- nlme(mean ~ phi1 * (age) * exp(-phi3 * age),
+            data = m,
+            fixed = phi1 + phi3 ~ 1,
+            random = phi1 + phi3 ~ 1|site,
+            start = c(phi1 = 3, phi3 = 0.25))
+
+nlme(mean ~ alpha * A ^ (alpha), data = df, random = alpha ~ 1 | SITE, fixed = list(A ~ 1, B ~ 1), start = c(1, 0.01))
+
+
+summary(fm1)
+fm2 <- update(fm1, random = pdDiag(Asym + lrc ~ 1))
+summary(fm2)
+```
+
+
+## Notes
+
+
+1) what is a reasonable planting interval for miscanthus? 
+
+15-20 years
+
+2) how to adjust predictions from Miguez et al 2012 to account for yield decline in mature stands.
+
+multiply by the vector (0.31, 0.58, 0.83, 1, 1.13, 1.2, 1.24, 1.26, 1.24, 1.22, 1.17, 1.12, 1.06, 1.01, 0.94, 0.87, 0.8, 0.75, 0.69, 0.63, 0.56, 0.51) and take the sum
+
+3) what annual rate of yield improvement might we expect for miscanthus yield in the future?
+
+2% [1-5%]
+
+4) how well do agronomic trials reflect yields that farmers might actually observe (the difference between experimental and agronomic yields caused by suboptimal practices)
+
+as much as 30% but probably much less
+
+1. what is a reasonable re-planting interval for miscanthus?
+
+15-20 years, based on:
+
+These extension articles give 15-20 years for Miscanthus,:
+http://www.farmdoc.illinois.edu/manage/newsletters/fefo11_06/fefo11_06.pdf
+http://www.extension.org/pages/26625/miscanthus-miscanthus-x-giganteus-for-biofuel-production
+
+2. How to adjust predictions from Miguez et al 2012 for yield declines in mature stands?
+
+For each year, multiply yields given by Miguez for year 4 by the numbers in this table:
+
+Arundale et al 2013 provide a figure of observed yield decline. The black circles are miscanthus (open are switchgrass) (b) is corrected for interannual variability in climate. 
+
+
+
+If you want to "correct" the predictions of Miguez et al 2012, one option would be to multiply numbers in Fernando's predictions by the yield at each age divided by the yield of a 4 year old stand, thus:
+
+predicted_yield * yield(year 3:10) / yield(year 4) 
+
+where yield(year 3:10) / yield (year 4) would come from the figure below, and would be a vector of length 7 something like [0.6, 1, 1.1, 1.1, 1, 0.6, 0.8, 0.7] though it would seem reasonable for years 8-15 to be given a constant value.
+
+Here is another figure: 
+
+
+
+Lesur et al 2013 
+
+
+Short of improving the model to account for yield decline in mature stands, this is probably the best you can do. Indeed, short of identifying a mechanism (such as N limitation or disease pressure) and implementing it in the model, what we would implement would be based on the same empirical relation between yield and age as above
+
+It would likely be worth doing - below is a comparison of Miguez et al 2012 predictions for yield in year 4 with yields observed by Becky Arundale (from her thesis) for years 3-10 at 16 sites, including 9 in Illinois and 7 across the US. (green is Miscanthus; ignore inset). These data are in a manuscript that I am currently preparing
+
+
+
+Please note that this is treating the model as a hypothesis and the data as a test, unlike most model 'validation' that is published at the same time as the model "calibration". This is a truly 'blinded' validation of model predictions made before Becky had analyzed the Miscanthus trials across the US. Fernando calibrated against European data, and validation was done with data from a few sites in Illinois. In particular, Fernando did not know about or account for the decline in yield that is observed in mature stands.
+
+3. Potential improvement through breeding?
+
+I think 2%/y is a reasonable number based on:
+expert opinion (based on discussions w/ breeders) 95% Confidence interval 0.5-5%/year
+McLaughlin come up with a range of potential yield improvement of 1.5-5% for switchgrass. Given the amount of hand waving here, this range is reasonable.
+Heaton et al 2008 cite Perlack et al 2005 as saying Switchgrass yields will increase by 60% in 25 years. This converts to 2%/year.
+Notes and Quotes from McLaughlin et al 
+Switchgrass was selected by Bison grazing pressure; Google says Miscanthus has also been grazed by domestic animals for 1000’s of years. So some assumptions about the impact on life history and traits related to potential yield should be similar (though mechanism is vague).
+“Wilkins and Humphreys (2003) reported that over the past 50 years, gains in DBY of the important forage grass species have been 4–5% per decade in northwestern Europe, but only 0–1% per decade in the United States.”
+“with early gains in maize improvement in the United States, which ranged from 3.5–6.0% of baseline yields in the 1930s to 1.3–1.8% in the 1990s (Tollenaar et al., 1994). Average yield gains for maize made over 70 years of breeding for commercial markets in Iowa have, as expected, been ower (0.7–1.2% per year) (Duvick, 1997).”
+
+4) how well do agronomic trials reflect yields that farmers might actually observe (the difference between experimental and agronomic yields caused by suboptimal practices)
+
+This abstract from the 2014 ASA meeting (Loyce et al) says commercial yields are 30% lower than field trials, owing to plot size, shape, location and history. But without looking at the data, it is hard to say (e.g., if they didn’t control for ‘location’, it isn’t terribly interesting - location will always affect yield).
+Even EBI agronomists don’t know best practices (and thus Miscanthus yields at the EBI energy farm has been much lower than colocated trials due to poor establishment. 
+Karp et al say 
+“Due to a lack of experience and the need for further optimization in commercial production, the yield gap is likely to be wider than for arable crops. On the other hand, technological and yield progress could be greater because these crops are relatively undomesticated. “
+
+
+
+Appendix
+
+Response ratios used to estimate yield decline
+
+
+year
+Arundale
+Lesur 
+
+
+1
+NA
+0.31
+
+
+2
+NA
+0.58
+
+
+3
+0.69
+0.82
+
+
+4
+1.00
+1.00
+
+
+5
+1.11
+1.12
+
+
+6
+1.07
+1.20
+
+
+7
+0.95
+1.24
+
+
+8
+0.80
+1.26
+
+
+9
+0.74
+1.24
+
+
+10
+0.74
+1.22
+
+
+11
+NA
+1.17
+
+
+12
+NA
+1.12
+
+
+13
+NA
+1.06
+
+
+14
+NA
+1.00
+
+
+15
+NA
+0.94
+
+
+16
+NA
+0.87
+
+
+17
+NA
+0.80
+
+
+18
+NA
+0.74
+
+
+19
+NA
+0.69
+
+
+20
+NA
+0.63
+
+
+21
+NA
+0.56
+
+
+22
+NA
+0.51
+
+
+
+
+
+code: 
+
+
+
+library(data.table)
+library(ggplot2)
+ 
+a <- structure(list(year = 1:22, arundale = c(NA, NA, 21.5, 31.2, 
+34.5, 33.3, 29.5, 25.1, 23, 23.2, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA), lesur = c(3.9, 7.4, 10.5, 12.7, 14.3, 15.2, 
+15.8, 16, 15.8, 15.5, 14.9, 14.2, 13.5, 12.8, 12, 11.1, 10.2, 
+9.5, 8.8, 8, 7.1, 6.5), lesur_lcl = c(3.1, 5.5, 7.2, 8.4, 9, 
+9.2, 9.2, 9, 8.7, 8.3, 7.7, 7.2, 6.6, 6.1, 5.6, 5, 4.5, 4, 3.7, 
+3.3, 2.8, 2.5), lesur_ucl = c(4.6, 9.4, 14.5, 18.4, 22, 24.6, 
+26.2, 27.5, 27.9, 28.2,
+...
