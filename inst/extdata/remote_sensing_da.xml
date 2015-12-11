@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+<pecan>
+  <outdir>/home/dlebauer/pecan_remote/remote_sensing_da</outdir>
+  <constants>
+    <file>/home/dlebauer/dev/biocro_regional/inst/extdata/defaults/miscanthus_ebifarm2012.xml</file>
+  </constants>
+  <pfts>
+    <pft>
+      <name>Miscanthus_x_giganteus</name>
+    </pft>
+  </pfts>
+  <meta.analysis>
+    <iter>3000</iter>
+    <random.effects>FALSE</random.effects>
+  </meta.analysis>
+  <ensemble>
+    <size>500</size>
+    <variable>StemBiom</variable>
+    <variable>LAI</variable>
+    <variable>TotLivBiom</variable>
+    <variable>Yield</variable>
+    <variable>Evap</variable>
+    <variable>TVeg</variable>
+  </ensemble>
+  <sensitivity.analysis>
+    <variable>StemBiom</variable>
+    <variable>LAI</variable>
+    <variable>TotLivBiom</variable>
+    <variable>Yield</variable>
+    <variable>Evap</variable>
+    <variable>TVeg</variable>
+    <start.year>2012</start.year>
+    <end.year>2012</end.year>
+  </sensitivity.analysis>
+  <model>
+    <type>BIOCRO</type>
+    <id>12</id>
+  </model>
+  <run>
+    <site>
+      <id>368</id>
+      <name>SoyFACE</name>	
+      <lat>40.0415</lat>
+      <lon>-88.2373</lon>
+    </site>
+      <inputs>
+       <met>
+        <id>305</id><!--305 is SoyFACE; 306 is EBI Farm-->
+       </met>
+       <soil>
+        <id>303</id>
+       </soil>
+   </inputs>
+    <start.date>2012-01-01 00:00:00</start.date>
+    <end.date>2012-12-31 00:00:00</end.date>
+    <host>
+     <name>roger-login.ncsa.illinois.edu</name>
+     <qsub>qsub -l walltime=05:00:00,nodes=5:ppn=10 -N @NAME@ -o @STDOUT@ -e @STDERR@</qsub>
+     <qsub.jobid>lionxo_test ([0-9]+) .*</qsub.jobid>
+     <qstat>qstat -j @JOBID@ 2&gt;1 &gt;/dev/null || echo DONE</qstat>
+     <modellauncher>
+       <binary>/home/dlebauer/dev/pecan/utils/modellauncher/modellauncher</binary>
+       <qsub.extra>-l ncpus=10</qsub.extra>
+     </modellauncher>
+   <rundir>/home/dlebauer/pecan_remote/remote_sensing_da/run</rundir>
+   <outdir>/home/dlebauer/pecan_remote/remote_sensing_da/out</outdir>
+  </host>
+  </run>
+  <database>
+    <bety>
+      <driver>PostgreSQL</driver>
+      <user>bety</user>
+      <password>bety</password>
+      <host>ebi-forecast.igb.illinois.edu</host>
+      <dbname>ebi_production</dbname>
+    </bety>
+  </database>
+  <bety>
+    <write>TRUE</write>
+  </bety>
+</pecan>

@@ -1,0 +1,58 @@
+
+## Prepare met data
+
+```{r eval = FALSE}
+library(PEcAn.all)
+format <- list(orig = c("TIMESTAMP",
+                        "PAR_APOGE_Avg", "AirTC_Avg", "RH1_Avg", 
+                        "RAIN_Tot", "WindSpd_Avg"
+                        ),
+               units = c("ymd_hms",
+                         "J m-2 s-1", "celsius", "%", 
+                         "mm", "m s-1"
+                        ),
+               bety = c("datetime", 
+                       "solar_radiation",  "airT", "relative_humidity",
+                        "precipitation_flux", "Wspd"
+                       ),
+               skip = 1, unit.row = TRUE, na.strings = NA)
+met2CF.csv(in.path = "~/Downloads/", in.file = "WeatherSE_Avg15 2012.csv", 
+           outfolder = "data/", lat = 40.04, lon = -88.24, format = format)
+```
+
+## PEcAn workflow
+
+
+Note - This was run on ebi-forecast. To run on your VM, you will need to change the location of the settings files. 
+
+
+```{r}
+library(PEcAn.all)
+logger.setQuitOnSevere(FALSE)
+setwd("/home/a-m/dlebauer/dev/")
+settings <- read.settings("biocro_regional/inst/extdata/remote_sensing_da.xml")
+
+
+# Query the trait database for data and priors
+settings$pfts <- get.trait.data(pft = settings$pfts, modeltype = settings$model$type, 
+                                dbfiles = settings$run$dbfiles, 
+                                database = settings$database$bety, forceupdate = TRUE)
+
+# Run the PEcAn meta.analysis
+run.meta.analysis(pfts = settings$pfts, iterations = settings$meta.analysis$iter, 
+                  threshold = settings$meta.analysis$threshold, 
+                  dbfiles = settings$run$dbfiles, database = settings$database$bety)
+
+settings$model$binary <- gsub("regional", "point", settings$model$binary)
+
+run.write.configs(settings = settings, write = TRUE) # Calls model specific write.configs e.g. write.config.ed.R
+## load met data
+
+start.model.runs(settings = settings, write = TRUE)    # Start ecosystem model runs
+
+get.results(settings)         # Get results of model runs
+
+run.sensitivity.analysis()      # Run sensitivity analysis and variance decomposition on model output
+
+run.ensemble.analysis()		      # Run ensemble analysis on model output. 
+```
